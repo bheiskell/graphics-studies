@@ -35,15 +35,42 @@ Vector.prototype.normalize = function() {
 
 var Perlin = function() {
 
+    this._linear = function(x, y, tl, tr, bl, br) {
+        var xt = tl * (1 - x) + tr * x;
+        var xb = bl * (1 - x) + br * x;
+
+        return xt * (1 - y) + xb * y;
+    }
+
+
+    this._cubic = function(x, y, tl, tr, bl, br) {
+        var cubic = function(offset) {
+            console.assert(offset <= 1);
+            console.assert(offset >= 0);
+
+            var result = 3 * (offset * offset) - 2 * (offset * offset * offset);
+
+            console.assert(result <= 1, result);
+            console.assert(result >= 0, result);
+            return result;
+        };
+
+        var xt = tl * cubic(1 - x) + tr * cubic(x);
+        var xb = bl * cubic(1 - x) + br * cubic(x);
+
+        return xt * cubic(1 - y) + xb * cubic(y);
+    };
+
     /**
-     * Linear interpolation of an individual point on a 2d grid given a source grid of points.
+     * Interpolation of an individual point on a 2d grid given a source grid of points.
      * @param {Number[][]} source array of rows (min size 2x2)
      * @param {Number} pointX the point defined within the space of the width
      * @param {Number} pointY the point defined within the space of the height
      * @param {Number} width grid width
      * @param {Number} height grid height
+     * @param {function} interpolation function (see _linear or _cubic)
      */
-    this.linearInterpolateSamplePoints = function(source, pointX, pointY, width, height) {
+    this.interpolateSamplePoints = function(source, pointX, pointY, width, height, interpolator) {
         console.assert(source.length && source[0].length);
         console.assert(pointX >= 0 && pointX <= width);
         console.assert(pointY >= 0 && pointY <= height);
@@ -72,21 +99,19 @@ var Perlin = function() {
 
         //console.log('Relative: ', relativeX, relativeY);
 
-        var interpolatedXT = sampleTL * (1 - relativeX) + sampleTR * relativeX;
-        var interpolatedXB = sampleBL * (1 - relativeX) + sampleBR * relativeX;
-        var interpolated = interpolatedXT * (1 - relativeY) + interpolatedXB * relativeY;
-        return interpolated;
+        return interpolator(relativeX, relativeY, sampleTL, sampleTR, sampleBL, sampleBR);
     }
 
     /**
-     * Linear interpolation of an individual point on a 2d grid given a source grid of vectors.
+     * Interpolation of an individual point on a 2d grid given a source grid of vectors.
      * @param {Vector[][]} source array of rows (min size 2x2)
      * @param {Number} pointX the point defined within the space of the width
      * @param {Number} pointY the point defined within the space of the height
      * @param {Number} width grid width
      * @param {Number} height grid height
+     * @param {function} interpolation function (see _linear or _cubic)
      */
-    this.linearInterpolateSampleVectors = function(source, pointX, pointY, width, height) {
+    this.interpolateSampleVectors = function(source, pointX, pointY, width, height, interpolator) {
     }
 
     /**
@@ -132,9 +157,12 @@ var Perlin = function() {
      * @param {Number} minFrequency the minimum frequency
      * @param {Number} maxFrequency the maximum frequency
      * @param {function(frequency)} amplitudeCalc the function that takes a frequency and returns the amplitude to be applied
+     * @param {Boolean} truethy value to indicate if we should use linear or cubic interoplation
      * @return 2d array of points on the grid
      */
-    this.generatePerlinPoints = function(minFrequency, maxFrequency, amplitudeCalc, width, height) {
+    this.generatePerlinPoints = function(minFrequency, maxFrequency, amplitudeCalc, width, height, linear) {
+        var interpolator = linear ? this._linear : this._cubic;
+
         var samples = [];
         for (var frequency = minFrequency; frequency <= maxFrequency; frequency *= 2) {
             samples.push(this.generateSamplePoints(frequency, frequency));
@@ -146,7 +174,7 @@ var Perlin = function() {
             for (var x = 0; x < width; x++) {
                 for (var i = 0; i < samples.length; i++) {
                     var sample = samples[i];
-                    row[x] += amplitudeCalc(frequency) * this.linearInterpolateSamplePoints(sample, x, y, width, height);
+                    row[x] += amplitudeCalc(frequency) * this.interpolateSamplePoints(sample, x, y, width, height, interpolator);
                 }
             }
             points.push(row);

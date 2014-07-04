@@ -33,7 +33,7 @@ A few notes:
 <ul>
     <li>If frequency min == max, random noise with interpolation will be displayed. Notice that this does not look organic. I.e., it is not Perlin noise. Try of frequency of 256, 256.</li>
     <li>If frequency max < height || width, pixels will be interpolated. Try a frequency of 2, 2.</li>
-    <li>Linear interpolation is suppose to look harsher than the smoother cubic version.</li>
+    <li>Linear interpolation is suppose to look harsher than the smoother cubic version. I found it to only really be noticable at lower frequencies.</li>
     <li>I've implemented two internal representations of the random noise used to generate Perlin noise. Point value is a simple random value per sample. Vectors use <a href="http://webstaff.itn.liu.se/~stegu/TNM022-2005/perlinnoiselinks/perlin-noise-math-faq.html">Matt Zucker's approach</a>.</li>
 </ul>
 
@@ -147,14 +147,14 @@ A few notes:
         };
 
         if (model.color === 0) {
-            var noise = perlin.generatePerlinPoints(model.min, model.max, frequencyToAmplitude, model.width, model.height);
+            var noise = perlin.generatePerlinPoints(model.min, model.max, frequencyToAmplitude, model.width, model.height, model.linear);
             var noiseR = noise,
                 noiseG = noise,
                 noiseB = noise;
         } else {
-            var noiseR = perlin.generatePerlinPoints(model.min, model.max, frequencyToAmplitude, model.width, model.height);
-            var noiseG = perlin.generatePerlinPoints(model.min, model.max, frequencyToAmplitude, model.width, model.height);
-            var noiseB = perlin.generatePerlinPoints(model.min, model.max, frequencyToAmplitude, model.width, model.height);
+            var noiseR = perlin.generatePerlinPoints(model.min, model.max, frequencyToAmplitude, model.width, model.height, model.linear);
+            var noiseG = perlin.generatePerlinPoints(model.min, model.max, frequencyToAmplitude, model.width, model.height, model.linear);
+            var noiseB = perlin.generatePerlinPoints(model.min, model.max, frequencyToAmplitude, model.width, model.height, model.linear);
         }
 
 
