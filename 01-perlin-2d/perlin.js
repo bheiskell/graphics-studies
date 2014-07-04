@@ -183,11 +183,12 @@ var Perlin = function() {
      * @param {Number} minFrequency the minimum frequency
      * @param {Number} maxFrequency the maximum frequency
      * @param {function(frequency)} amplitudeCalc the function that takes a frequency and returns the amplitude to be applied
-     * @param {Boolean} truthy value to indicate if we should use linear or cubic interoplation
-     * @param {Boolean} truthy value to indicate if we should use vectors to represnent the samples
+     * @param {Boolean} linear truthy value to indicate if we should use linear or cubic interoplation
+     * @param {Boolean} vector truthy value to indicate if we should use vectors to represnent the samples
+     * @param {Boolean} tile truthy value to indicate if we should make this a repeatable pattern
      * @return 2d array of points on the grid
      */
-    this.generatePerlinPoints = function(minFrequency, maxFrequency, amplitudeCalc, width, height, linear, vector) {
+    this.generatePerlinPoints = function(minFrequency, maxFrequency, amplitudeCalc, width, height, linear, vector, tile) {
         var typeGenerator = vector ? this.generateSampleVectors : this.generateSamplePoints;
 
         if (vector) {
@@ -207,7 +208,17 @@ var Perlin = function() {
             for (var x = 0; x < width; x++) {
                 for (var i = 0; i < samples.length; i++) {
                     var sample = samples[i];
-                    row[x] += amplitudeCalc(frequency) * this.interpolateSamples(sample, x, y, width, height, interpolator);
+                    if (tile) {
+                        var value =
+                            this.interpolateSamples(sample,         x,          y, width, height, interpolator) * (width - x) * (height - y) +
+                            this.interpolateSamples(sample, width - x,          y, width, height, interpolator) * (        x) * (height - y) +
+                            this.interpolateSamples(sample, width - x, height - y, width, height, interpolator) * (        x) * (         y) +
+                            this.interpolateSamples(sample,         x, height - y, width, height, interpolator) * (width - x) * (         y);
+                    } else {
+                        var value = this.interpolateSamples(sample, x, y, width, height, interpolator);
+                    }
+
+                    row[x] += amplitudeCalc(frequency) * value;
                 }
             }
             points.push(row);
