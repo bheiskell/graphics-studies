@@ -45,13 +45,13 @@ var Perlin = function() {
 
     this._cubic = function(x, y, tl, tr, bl, br) {
         var cubic = function(offset) {
-            console.assert(offset <= 1);
-            console.assert(offset >= 0);
+            //console.assert(offset <= 1);
+            //console.assert(offset >= 0);
 
             var result = 3 * (offset * offset) - 2 * (offset * offset * offset);
 
-            console.assert(result <= 1, result);
-            console.assert(result >= 0, result);
+            //console.assert(result <= 1, result);
+            //console.assert(result >= 0, result);
             return result;
         };
 
@@ -71,9 +71,9 @@ var Perlin = function() {
      * @param {function} interpolation function (see _linear or _cubic)
      */
     this.interpolateSamplePoints = function(source, pointX, pointY, width, height, interpolator) {
-        console.assert(source.length && source[0].length);
-        console.assert(pointX >= 0 && pointX <= width);
-        console.assert(pointY >= 0 && pointY <= height);
+        //console.assert(source.length && source[0].length);
+        //console.assert(pointX >= 0 && pointX <= width);
+        //console.assert(pointY >= 0 && pointY <= height);
 
         var sampleRows = source.length;
         var sampleCols = source[0].length;
