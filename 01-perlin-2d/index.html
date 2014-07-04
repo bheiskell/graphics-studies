@@ -6,7 +6,6 @@
     <script src="perlin.js" type="text/javascript"></script>
     <style>
         canvas {
-            border: 1px solid black;
             margin-top: 1em;
         }
         label {
@@ -25,6 +24,18 @@
     </style>
 </head>
 <body>
+<p>
+This is a configurable 2D perlin noise implementation designed to show the visual implications of design decisions. This is not performant code; avoid extremely large values.
+</p>
+<p>
+A few notes:
+</p>
+<ul>
+    <li>If frequency min == max, random noise with interpolation will be displayed. Notice that this does not look organic. I.e., it is not Perlin noise. Try of frequency of 256, 256.</li>
+    <li>If frequency max < height || width, pixels will be interpolated. Try a frequency of 2, 2.</li>
+    <li>Linear interpolation is suppose to look harsher than the smoother cubic version.</li>
+    <li>I've implemented two internal representations of the random noise used to generate Perlin noise. Point value is a simple random value per sample. Vectors use <a href="http://webstaff.itn.liu.se/~stegu/TNM022-2005/perlinnoiselinks/perlin-noise-math-faq.html">Matt Zucker's approach</a>.</li>
+</ul>
 
 <form id="form">
     <fieldset>
