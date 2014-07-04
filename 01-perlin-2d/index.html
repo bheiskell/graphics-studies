@@ -21,6 +21,12 @@
             vertical-align: top;
             min-width: 275px;
         }
+        ul {
+            width: 600px;
+        }
+        li {
+            margin-top: 1em;
+        }
     </style>
 </head>
 <body>
@@ -33,8 +39,17 @@ A few notes:
 <ul>
     <li>If frequency min == max, random noise with interpolation will be displayed. Notice that this does not look organic. I.e., it is not Perlin noise. Try of frequency of 256, 256.</li>
     <li>If frequency max < height || width, pixels will be interpolated. Try a frequency of 2, 2.</li>
-    <li>Linear interpolation is suppose to look harsher than the smoother cubic version. I found it to only really be noticable at lower frequencies.</li>
-    <li>I've implemented two internal representations of the random noise used to generate Perlin noise. Point value is a simple random value per sample. Vectors use <a href="http://webstaff.itn.liu.se/~stegu/TNM022-2005/perlinnoiselinks/perlin-noise-math-faq.html">Matt Zucker's approach</a>.</li>
+    <li>Linear interpolation is suppose to look harsher than the smoother cubic version. I found it to only really be noticeable at lower frequencies.</li>
+    <li>
+        I've implemented two internal representations of the random noise used
+        to generate Perlin noise. Point value is a simple random value per sample.
+        Vectors use <a href="http://webstaff.itn.liu.se/~stegu/TNM022-2005/perlinnoiselinks/perlin-noise-math-faq.html">Matt Zucker's approach</a>.
+
+        Vectors add another dimension to the noise at each point, creating an
+        ever more organic looking noise pattern. However, it seems the vector approach
+        has more artifacts when using linear interpolation. This is most
+        noticable at low frequencies.
+    </li>
 </ul>
 
 <form id="form">
@@ -138,7 +153,7 @@ A few notes:
 
         canvas.attr('width', model.width).attr('height', model.height).show();
 
-        console.log(model);
+        //console.log(model);
 
         var perlin = new Perlin();
 
@@ -147,14 +162,14 @@ A few notes:
         };
 
         if (model.color === 0) {
-            var noise = perlin.generatePerlinPoints(model.min, model.max, frequencyToAmplitude, model.width, model.height, model.linear);
+            var noise = perlin.generatePerlinPoints(model.min, model.max, frequencyToAmplitude, model.width, model.height, model.linear, model.vector);
             var noiseR = noise,
                 noiseG = noise,
                 noiseB = noise;
         } else {
-            var noiseR = perlin.generatePerlinPoints(model.min, model.max, frequencyToAmplitude, model.width, model.height, model.linear);
-            var noiseG = perlin.generatePerlinPoints(model.min, model.max, frequencyToAmplitude, model.width, model.height, model.linear);
-            var noiseB = perlin.generatePerlinPoints(model.min, model.max, frequencyToAmplitude, model.width, model.height, model.linear);
+            var noiseR = perlin.generatePerlinPoints(model.min, model.max, frequencyToAmplitude, model.width, model.height, model.linear, model.vector);
+            var noiseG = perlin.generatePerlinPoints(model.min, model.max, frequencyToAmplitude, model.width, model.height, model.linear, model.vector);
+            var noiseB = perlin.generatePerlinPoints(model.min, model.max, frequencyToAmplitude, model.width, model.height, model.linear, model.vector);
         }
 
 
