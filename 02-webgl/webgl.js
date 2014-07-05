@@ -153,7 +153,7 @@ $(function() {
         gl.bindBuffer(gl.ARRAY_BUFFER, colorsBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
 
-        this.position  = [-1.5, 0.0, -7.0];
+        this.position  = [-1.5, 1.5, -10.0];
         this.positions = positionsBuffer;
         this.colors    = colorsBuffer;
         this.rotation  = 0;
@@ -207,7 +207,7 @@ $(function() {
         gl.bindBuffer(gl.ARRAY_BUFFER, colorsBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
 
-        this.position  = [1.5, 0.0, -7.0];
+        this.position  = [1.5, 1.5, -10.0];
         this.positions = positionsBuffer;
         this.colors    = colorsBuffer;
         this.rotation  = 0;
@@ -227,6 +227,200 @@ $(function() {
         };
         this.animate = function(elapsed) {
             this.rotation += (75 * elapsed) / 1000.0;
+        };
+    };
+
+    /**
+     * Create a pyramid.
+     */
+    var Pyramid = function() {
+        var positions = [
+            // Front face
+             0.0,  1.0,  0.0,
+            -1.0, -1.0,  1.0,
+             1.0, -1.0,  1.0,
+            // Right face
+             0.0,  1.0,  0.0,
+             1.0, -1.0,  1.0,
+             1.0, -1.0, -1.0,
+            // Back face
+             0.0,  1.0,  0.0,
+             1.0, -1.0, -1.0,
+            -1.0, -1.0, -1.0,
+            // Left face
+             0.0,  1.0,  0.0,
+            -1.0, -1.0, -1.0,
+            -1.0, -1.0,  1.0
+        ];
+        var positionsBuffer = gl.createBuffer();
+        positionsBuffer.itemSize = 3;
+        positionsBuffer.numItems = positions.length / positionsBuffer.itemSize;
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionsBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+
+        var colors = [
+            // Front face
+            1.0, 0.0, 0.0, 1.0,
+            0.0, 1.0, 0.0, 1.0,
+            0.0, 0.0, 1.0, 1.0,
+            // Right face
+            1.0, 0.0, 0.0, 1.0,
+            0.0, 0.0, 1.0, 1.0,
+            0.0, 1.0, 0.0, 1.0,
+            // Back face
+            1.0, 0.0, 0.0, 1.0,
+            0.0, 1.0, 0.0, 1.0,
+            0.0, 0.0, 1.0, 1.0,
+            // Left face
+            1.0, 0.0, 0.0, 1.0,
+            0.0, 0.0, 1.0, 1.0,
+            0.0, 1.0, 0.0, 1.0
+        ];
+        var colorsBuffer = gl.createBuffer();
+        colorsBuffer.itemSize = 4;
+        colorsBuffer.numItems = colors.length / colorsBuffer.itemSize;
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, colorsBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
+
+        this.position  = [-1.5, -1.5, -10.0];
+        this.positions = positionsBuffer;
+        this.colors    = colorsBuffer;
+        this.rotation  = 0;
+
+        this.draw = function(program, perspectiveMatrix, movementMatrix) {
+            mat4.translate(movementMatrix, this.position);
+            mat4.rotate(movementMatrix, degreesToRadians(this.rotation), [0, 1, 0]);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.positions);
+            gl.vertexAttribPointer(program.vertexPositionAttribute, this.positions.itemSize, gl.FLOAT, false, 0, 0);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.colors);
+            gl.vertexAttribPointer(program.vertexColorAttribute, this.colors.itemSize, gl.FLOAT, false, 0, 0);
+
+            setMatrixUniforms(program, perspectiveMatrix, movementMatrix);
+            gl.drawArrays(gl.TRIANGLES, 0, this.positions.numItems);
+
+            setMatrixUniforms(program, perspectiveMatrix, movementMatrix);
+        };
+        this.animate = function(elapsed) {
+            this.rotation += (90 * elapsed) / 1000.0;
+        };
+    };
+
+    /**
+     * Create a cube.
+     */
+    var Cube = function() {
+        var positions = [
+            // Front face
+            -1.0, -1.0,  1.0,
+             1.0, -1.0,  1.0,
+             1.0,  1.0,  1.0,
+            -1.0,  1.0,  1.0,
+
+            // Back face
+            -1.0, -1.0, -1.0,
+            -1.0,  1.0, -1.0,
+             1.0,  1.0, -1.0,
+             1.0, -1.0, -1.0,
+
+            // Top face
+            -1.0,  1.0, -1.0,
+            -1.0,  1.0,  1.0,
+             1.0,  1.0,  1.0,
+             1.0,  1.0, -1.0,
+
+            // Bottom face
+            -1.0, -1.0, -1.0,
+             1.0, -1.0, -1.0,
+             1.0, -1.0,  1.0,
+            -1.0, -1.0,  1.0,
+
+            // Right face
+             1.0, -1.0, -1.0,
+             1.0,  1.0, -1.0,
+             1.0,  1.0,  1.0,
+             1.0, -1.0,  1.0,
+
+            // Left face
+            -1.0, -1.0, -1.0,
+            -1.0, -1.0,  1.0,
+            -1.0,  1.0,  1.0,
+            -1.0,  1.0, -1.0,
+        ];
+        var positionsBuffer = gl.createBuffer();
+        positionsBuffer.itemSize = 3;
+        positionsBuffer.numItems = positions.length / positionsBuffer.itemSize;
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionsBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+
+        var packedColors = [
+            [1.0, 0.0, 0.0, 1.0], // Front face
+            [1.0, 1.0, 0.0, 1.0], // Back face
+            [0.0, 1.0, 0.0, 1.0], // Top face
+            [1.0, 0.5, 0.5, 1.0], // Bottom face
+            [1.0, 0.0, 1.0, 1.0], // Right face
+            [0.0, 0.0, 1.0, 1.0], // Left face
+        ];
+        // create color, one for each vertex
+        var colors = packedColors.map(function(color) {
+            return [].concat(color)
+                     .concat(color)
+                     .concat(color)
+                     .concat(color);
+        }).reduce(function(memo, color) {
+            return memo.concat(color);;
+        });
+
+        var colorsBuffer = gl.createBuffer();
+        colorsBuffer.itemSize = 4;
+        colorsBuffer.numItems = colors.length / colorsBuffer.itemSize;
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, colorsBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
+
+        var indexes = [
+            0, 1, 2,      0, 2, 3,    // Front face
+            4, 5, 6,      4, 6, 7,    // Back face
+            8, 9, 10,     8, 10, 11,  // Top face
+            12, 13, 14,   12, 14, 15, // Bottom face
+            16, 17, 18,   16, 18, 19, // Right face
+            20, 21, 22,   20, 22, 23  // Left face
+        ];
+        var indexesBuffer = gl.createBuffer();
+        indexesBuffer.itemSize = 1;
+        indexesBuffer.numItems = indexes.length / indexesBuffer.itemSize;
+
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexesBuffer);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indexes), gl.STATIC_DRAW);
+
+        this.position  = [1.5, -1.5, -10.0];
+        this.indexes   = indexesBuffer;
+        this.positions = positionsBuffer;
+        this.colors    = colorsBuffer;
+        this.rotation  = 0;
+
+        this.draw = function(program, perspectiveMatrix, movementMatrix) {
+            mat4.translate(movementMatrix, this.position);
+            mat4.rotate(movementMatrix, degreesToRadians(this.rotation), [1, 1, 1]);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.positions);
+            gl.vertexAttribPointer(program.vertexPositionAttribute, this.positions.itemSize, gl.FLOAT, false, 0, 0);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.colors);
+            gl.vertexAttribPointer(program.vertexColorAttribute, this.colors.itemSize, gl.FLOAT, false, 0, 0);
+
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexes);
+
+            setMatrixUniforms(program, perspectiveMatrix, movementMatrix);
+
+            gl.drawElements(gl.TRIANGLES, this.indexes.numItems, gl.UNSIGNED_SHORT, 0);
+        };
+        this.animate = function(elapsed) {
+            this.rotation += (90 * elapsed) / 1000.0;
         };
     };
 
@@ -303,9 +497,12 @@ $(function() {
     var movementMatrix = mat4.create();
     var movementMatrixStack = [];
 
-    var triangle = new Triangle();
-    var square = new Square();
-    var objects = [triangle, square];
+    var objects = [
+        new Triangle(),
+        new Square(),
+        new Pyramid(),
+        new Cube()
+    ];
 
     tick();
 });
