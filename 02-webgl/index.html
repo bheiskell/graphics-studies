@@ -8,15 +8,18 @@
 
     <script type="x-shader/x-vertex" id="2d-shader-vertex">
         attribute vec3 aVertexPosition;
+        attribute vec2 aTextureCoord;
         attribute vec4 aVertexColor;
 
         uniform mat4 uPerspectiveMatrix;
         uniform mat4 uMovementMatrix;
 
+        varying vec2 vTextureCoord;
         varying vec4 vColor;
 
         void main(void) {
             gl_Position = uPerspectiveMatrix * uMovementMatrix * vec4(aVertexPosition, 1.0);
+            vTextureCoord = aTextureCoord;
             vColor = aVertexColor;
         }
     </script>
@@ -24,10 +27,18 @@
     <script type="x-shader/x-fragment" id="2d-shader-fragment">
         precision mediump float;
 
+        uniform bool uUseTexture;
+        uniform sampler2D uSampler;
+
+        varying vec2 vTextureCoord;
         varying vec4 vColor;
 
         void main(void) {
-            gl_FragColor = vColor;
+            if (uUseTexture) {
+                gl_FragColor = texture2D(uSampler, vTextureCoord.st);
+            } else {
+                gl_FragColor = vColor;
+            }
         }
     </script>
 

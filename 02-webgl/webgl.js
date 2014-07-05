@@ -83,11 +83,15 @@ $(function() {
 
         program.vertexPositionAttribute = gl.getAttribLocation(program, 'aVertexPosition');
         program.vertexColorAttribute = gl.getAttribLocation(program, 'aVertexColor');
+        program.textureCoordAttribute = gl.getAttribLocation(program, 'aTextureCoord');
         gl.enableVertexAttribArray(program.vertexPositionAttribute);
         gl.enableVertexAttribArray(program.vertexColorAttribute);
+        gl.enableVertexAttribArray(program.textureCoordAttribute);
 
         program.perspectiveMatrixUniform = gl.getUniformLocation(program, 'uPerspectiveMatrix');
         program.movementMatrixUniform = gl.getUniformLocation(program, 'uMovementMatrix');
+        program.samplerUniform = gl.getUniformLocation(program, 'uSampler');
+        program.useTextureUniform = gl.getUniformLocation(program, 'uUseTexture');
 
         return program;
     }
@@ -107,6 +111,7 @@ $(function() {
             gl.bindTexture(gl.TEXTURE_2D, null);
         };
         texture.image.src = url;
+        return texture;
     };
 
     /**
@@ -185,6 +190,8 @@ $(function() {
             gl.bindBuffer(gl.ARRAY_BUFFER, this.colors);
             gl.vertexAttribPointer(program.vertexColorAttribute, this.colors.itemSize, gl.FLOAT, false, 0, 0);
 
+            gl.uniform1i(program.useTextureUniform, false);
+
             setMatrixUniforms(program, perspectiveMatrix, movementMatrix);
             gl.drawArrays(gl.TRIANGLES, 0, this.positions.numItems);
         };
@@ -238,6 +245,8 @@ $(function() {
 
             gl.bindBuffer(gl.ARRAY_BUFFER, this.colors);
             gl.vertexAttribPointer(program.vertexColorAttribute, this.colors.itemSize, gl.FLOAT, false, 0, 0);
+
+            gl.uniform1i(program.useTextureUniform, false);
 
             setMatrixUniforms(program, perspectiveMatrix, movementMatrix);
             gl.drawArrays(gl.TRIANGLE_STRIP, 0, this.positions.numItems);
@@ -319,6 +328,8 @@ $(function() {
             setMatrixUniforms(program, perspectiveMatrix, movementMatrix);
             gl.drawArrays(gl.TRIANGLES, 0, this.positions.numItems);
 
+            gl.uniform1i(program.useTextureUniform, false);
+
             setMatrixUniforms(program, perspectiveMatrix, movementMatrix);
         };
         this.animate = function(elapsed) {
@@ -329,7 +340,7 @@ $(function() {
     /**
      * Create a cube.
      */
-    var Cube = function(position) {
+    var Cube = function(position, texture) {
         var positions = [
             // Front face
             -1.0, -1.0,  1.0,
@@ -399,6 +410,51 @@ $(function() {
         gl.bindBuffer(gl.ARRAY_BUFFER, colorsBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
 
+        var textures = [
+            // Front face
+            0.0, 0.0,
+            1.0, 0.0,
+            1.0, 1.0,
+            0.0, 1.0,
+
+            // Back face
+            1.0, 0.0,
+            1.0, 1.0,
+            0.0, 1.0,
+            0.0, 0.0,
+
+            // Top face
+            0.0, 1.0,
+            0.0, 0.0,
+            1.0, 0.0,
+            1.0, 1.0,
+
+            // Bottom face
+            1.0, 1.0,
+            0.0, 1.0,
+            0.0, 0.0,
+            1.0, 0.0,
+
+            // Right face
+            1.0, 0.0,
+            1.0, 1.0,
+            0.0, 1.0,
+            0.0, 0.0,
+
+            // Left face
+            0.0, 0.0,
+            1.0, 0.0,
+            1.0, 1.0,
+            0.0, 1.0,
+        ];
+
+        var texturesBuffer = gl.createBuffer();
+        texturesBuffer.itemSize = 2;
+        texturesBuffer.numItems = textures.length / texturesBuffer.itemSize;
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, texturesBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textures), gl.STATIC_DRAW);
+
         var indexes = [
             0, 1, 2,      0, 2, 3,    // Front face
             4, 5, 6,      4, 6, 7,    // Back face
@@ -415,9 +471,11 @@ $(function() {
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indexes), gl.STATIC_DRAW);
 
         this.position  = position;
+        this.texture   = texture;
         this.indexes   = indexesBuffer;
         this.positions = positionsBuffer;
         this.colors    = colorsBuffer;
+        this.textures  = texturesBuffer;
         this.rotation  = 0;
 
         this.draw = function(program, perspectiveMatrix, movementMatrix) {
@@ -429,6 +487,14 @@ $(function() {
 
             gl.bindBuffer(gl.ARRAY_BUFFER, this.colors);
             gl.vertexAttribPointer(program.vertexColorAttribute, this.colors.itemSize, gl.FLOAT, false, 0, 0);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.textures);
+            gl.vertexAttribPointer(program.textureCoordAttribute, this.textures.itemSize, gl.FLOAT, false, 0, 0);
+
+            gl.activeTexture(gl.TEXTURE0);
+            gl.bindTexture(gl.TEXTURE_2D, this.texture);
+            gl.uniform1i(program.samplerUniform, 0);
+            gl.uniform1i(program.useTextureUniform, this.texture !== undefined);
 
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexes);
 
@@ -520,7 +586,8 @@ $(function() {
         new Triangle([-1.5,  1.5, -10.0]),
         new Square(  [ 1.5,  1.5, -10.0]),
         new Pyramid( [-1.5, -1.5, -10.0]),
-        new Cube(    [ 1.5, -1.5, -10.0])
+        new Cube(    [ 1.5, -1.5, -10.0]),
+        new Cube(    [-4.5, -1.5, -10.0], crate)
     ];
 
     tick();
