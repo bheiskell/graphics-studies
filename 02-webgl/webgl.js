@@ -64,7 +64,9 @@ $(function() {
         gl.useProgram(program);
 
         program.vertexPositionAttribute = gl.getAttribLocation(program, 'aVertexPosition');
+        program.vertexColorAttribute = gl.getAttribLocation(program, 'aVertexColor');
         gl.enableVertexAttribArray(program.vertexPositionAttribute);
+        gl.enableVertexAttribArray(program.vertexColorAttribute);
 
         program.perspectiveMatrixUniform = gl.getUniformLocation(program, 'uPerspectiveMatrix');
         program.movementMatrixUniform = gl.getUniformLocation(program, 'uMovementMatrix');
@@ -94,6 +96,22 @@ $(function() {
         return vertexBuffer;
     };
 
+    var colorTriangle = function() {
+        var vertices = [
+             1.0,  0.0,  0.0, 1.0,
+             0.0,  1.0,  0.0, 1.0,
+             0.0,  0.0,  1.0, 1.0
+        ];
+        var vertexBuffer = gl.createBuffer();
+        vertexBuffer.itemSize = 4;
+        vertexBuffer.numItems = vertices.length / vertexBuffer.itemSize;
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+
+        return vertexBuffer;
+    };
+
     var drawSquare = function() {
         var vertices = [
              1.0,  1.0,  0.0,
@@ -104,6 +122,23 @@ $(function() {
 
         var vertexBuffer = gl.createBuffer();
         vertexBuffer.itemSize = 3;
+        vertexBuffer.numItems = vertices.length / vertexBuffer.itemSize;
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+
+        return vertexBuffer;
+    };
+
+    var colorSquare = function() {
+        var vertices = [
+             0.5,  0.5,  1.0, 1.0,
+             0.5,  0.5,  1.0, 1.0,
+             0.5,  0.5,  1.0, 1.0,
+             0.5,  0.5,  1.0, 1.0
+        ];
+        var vertexBuffer = gl.createBuffer();
+        vertexBuffer.itemSize = 4;
         vertexBuffer.numItems = vertices.length / vertexBuffer.itemSize;
 
         gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
@@ -127,12 +162,16 @@ $(function() {
         mat4.translate(movementMatrix, [-1.5, 0.0, -7.0]);
         gl.bindBuffer(gl.ARRAY_BUFFER, triangleVertexBuffer);
         gl.vertexAttribPointer(program.vertexPositionAttribute, triangleVertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
+        gl.bindBuffer(gl.ARRAY_BUFFER, triangleColorBuffer);
+        gl.vertexAttribPointer(program.vertexColorAttribute, triangleColorBuffer.itemSize, gl.FLOAT, false, 0, 0);
         setMatrixUniforms();
         gl.drawArrays(gl.TRIANGLES, 0, triangleVertexBuffer.numItems);
 
         mat4.translate(movementMatrix, [3.0, 0.0, 0.0]);
         gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexBuffer);
         gl.vertexAttribPointer(program.vertexPositionAttribute, squareVertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
+        gl.bindBuffer(gl.ARRAY_BUFFER, squareColorBuffer);
+        gl.vertexAttribPointer(program.vertexColorAttribute, squareColorBuffer.itemSize, gl.FLOAT, false, 0, 0);
         setMatrixUniforms();
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, squareVertexBuffer.numItems);
     };
@@ -147,6 +186,8 @@ $(function() {
 
     var triangleVertexBuffer = drawTriangle();
     var squareVertexBuffer = drawSquare();
+    var triangleColorBuffer = colorTriangle();
+    var squareColorBuffer = colorSquare();
 
     drawScene();
 });
