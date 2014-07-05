@@ -74,6 +74,19 @@ $(function() {
         return program;
     }
 
+    var pushMovementMatrix = function() {
+        var copy = mat4.create();
+        mat4.set(movementMatrix, copy);
+        movementMatrixStack.push(copy);
+    };
+
+    var popMovementMatrix = function() {
+        movementMatrix = movementMatrixStack.pop();
+    };
+
+    var degreesToRadians = function(degrees) {
+        return degrees * Math.PI / 180;
+    }
 
     var setMatrixUniforms = function() {
         gl.uniformMatrix4fv(program.perspectiveMatrixUniform, false, perspectiveMatrix);
@@ -159,7 +172,10 @@ $(function() {
         mat4.perspective(viewAngle, aspectRatio, viewDistanceMin, viewDistanceMax, perspectiveMatrix);
         mat4.identity(movementMatrix);
 
+        pushMovementMatrix();
+
         mat4.translate(movementMatrix, [-1.5, 0.0, -7.0]);
+        mat4.rotate(movementMatrix, degreesToRadians(rotationTriangle), [0, 1, 0]);
         gl.bindBuffer(gl.ARRAY_BUFFER, triangleVertexBuffer);
         gl.vertexAttribPointer(program.vertexPositionAttribute, triangleVertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
         gl.bindBuffer(gl.ARRAY_BUFFER, triangleColorBuffer);
@@ -167,13 +183,46 @@ $(function() {
         setMatrixUniforms();
         gl.drawArrays(gl.TRIANGLES, 0, triangleVertexBuffer.numItems);
 
-        mat4.translate(movementMatrix, [3.0, 0.0, 0.0]);
+        popMovementMatrix();
+        pushMovementMatrix();
+
+        mat4.translate(movementMatrix, [1.5, 0.0, -7.0]);
+        mat4.rotate(movementMatrix, degreesToRadians(rotationSquare), [1, 0, 0]);
         gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexBuffer);
         gl.vertexAttribPointer(program.vertexPositionAttribute, squareVertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
         gl.bindBuffer(gl.ARRAY_BUFFER, squareColorBuffer);
         gl.vertexAttribPointer(program.vertexColorAttribute, squareColorBuffer.itemSize, gl.FLOAT, false, 0, 0);
         setMatrixUniforms();
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, squareVertexBuffer.numItems);
+
+        popMovementMatrix();
+    };
+
+    var prevTime = new Date().getTime();
+    var animate = function() {
+        var newTime = new Date().getTime();
+        var elapsed = newTime - prevTime;
+
+        rotationTriangle += (90 * elapsed) / 1000.0;
+        rotationSquare   += (75 * elapsed) / 1000.0;
+
+        prevTime = newTime;
+    };
+
+    var requestAnimFrame = function(callback) {
+        return window.requestAnimationFrame(callback)
+            || window.webkitRequestAnimationFrame(callback)
+            || window.mozRequestAnimationFrame(callback)
+            || window.oRequestAnimationFrame(callback)
+            || window.msRequestAnimationFrame(callback)
+            || function(callback) { window.setTimeout(callback, 1000 / 60); };
+    }
+
+    var tick = function() {
+        requestAnimFrame(tick);
+
+        drawScene();
+        animate();
     };
 
     var gl = initGl('#canvas');
@@ -184,10 +233,14 @@ $(function() {
     var perspectiveMatrix = mat4.create();
     var movementMatrix = mat4.create();
 
+    var movementMatrixStack = [];
+
     var triangleVertexBuffer = drawTriangle();
     var squareVertexBuffer = drawSquare();
     var triangleColorBuffer = colorTriangle();
     var squareColorBuffer = colorSquare();
+    var rotationTriangle = 0;
+    var rotationSquare = 0;
 
-    drawScene();
+    tick();
 });
