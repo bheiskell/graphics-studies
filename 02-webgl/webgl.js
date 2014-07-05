@@ -120,88 +120,114 @@ $(function() {
     /**
      * Update the buffered position and perspective matrix uniforms.
      */
-    var setMatrixUniforms = function() {
+    var setMatrixUniforms = function(program, perspectiveMatrix, movementMatrix) {
         gl.uniformMatrix4fv(program.perspectiveMatrixUniform, false, perspectiveMatrix);
         gl.uniformMatrix4fv(program.movementMatrixUniform, false, movementMatrix);
     };
 
     /**
-     * Create a triangles vertices.
+     * Create a triangle.
      */
-    var createTriangleVertices = function() {
-        var vertices = [
+    var Triangle = function() {
+        var positions = [
              0.0,  1.0,  0.0,
             -1.0, -1.0,  0.0,
              1.0, -1.0,  0.0,
         ];
-        var vertexBuffer = gl.createBuffer();
-        vertexBuffer.itemSize = 3;
-        vertexBuffer.numItems = vertices.length / vertexBuffer.itemSize;
+        var positionsBuffer = gl.createBuffer();
+        positionsBuffer.itemSize = 3;
+        positionsBuffer.numItems = positions.length / positionsBuffer.itemSize;
 
-        gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionsBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
 
-        return vertexBuffer;
-    };
-
-    /**
-     * Create a triangles color vertices.
-     */
-    var createTriangleColorVertices = function() {
-        var vertices = [
+        var colors = [
              1.0,  0.0,  0.0, 1.0,
              0.0,  1.0,  0.0, 1.0,
              0.0,  0.0,  1.0, 1.0
         ];
-        var vertexBuffer = gl.createBuffer();
-        vertexBuffer.itemSize = 4;
-        vertexBuffer.numItems = vertices.length / vertexBuffer.itemSize;
+        var colorsBuffer = gl.createBuffer();
+        colorsBuffer.itemSize = 4;
+        colorsBuffer.numItems = colors.length / colorsBuffer.itemSize;
 
-        gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+        gl.bindBuffer(gl.ARRAY_BUFFER, colorsBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
 
-        return vertexBuffer;
+        this.position  = [-1.5, 0.0, -7.0];
+        this.positions = positionsBuffer;
+        this.colors    = colorsBuffer;
+        this.rotation  = 0;
+
+        this.draw = function(program, perspectiveMatrix, movementMatrix) {
+            mat4.translate(movementMatrix, this.position);
+            mat4.rotate(movementMatrix, degreesToRadians(this.rotation), [0, 1, 0]);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.positions);
+            gl.vertexAttribPointer(program.vertexPositionAttribute, this.positions.itemSize, gl.FLOAT, false, 0, 0);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.colors);
+            gl.vertexAttribPointer(program.vertexColorAttribute, this.colors.itemSize, gl.FLOAT, false, 0, 0);
+
+            setMatrixUniforms(program, perspectiveMatrix, movementMatrix);
+            gl.drawArrays(gl.TRIANGLES, 0, this.positions.numItems);
+        };
+        this.animate = function(elapsed) {
+            this.rotation += (90 * elapsed) / 1000.0;
+        };
     };
 
     /**
-     * Create a squares vertices.
+     * Create a square.
      */
-    var createSquareVertices = function() {
-        var vertices = [
+    var Square = function() {
+        var positions = [
              1.0,  1.0,  0.0,
             -1.0,  1.0,  0.0,
              1.0, -1.0,  0.0,
             -1.0, -1.0,  0.0
         ];
 
-        var vertexBuffer = gl.createBuffer();
-        vertexBuffer.itemSize = 3;
-        vertexBuffer.numItems = vertices.length / vertexBuffer.itemSize;
+        var positionsBuffer = gl.createBuffer();
+        positionsBuffer.itemSize = 3;
+        positionsBuffer.numItems = positions.length / positionsBuffer.itemSize;
 
-        gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionsBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
 
-        return vertexBuffer;
-    };
-
-    /**
-     * Create a squares color vertices.
-     */
-    var createSquareColorVertices = function() {
-        var vertices = [
+        var colors = [
              0.5,  0.5,  1.0, 1.0,
              0.5,  0.5,  1.0, 1.0,
              0.5,  0.5,  1.0, 1.0,
              0.5,  0.5,  1.0, 1.0
         ];
-        var vertexBuffer = gl.createBuffer();
-        vertexBuffer.itemSize = 4;
-        vertexBuffer.numItems = vertices.length / vertexBuffer.itemSize;
+        var colorsBuffer = gl.createBuffer();
+        colorsBuffer.itemSize = 4;
+        colorsBuffer.numItems = colors.length / colorsBuffer.itemSize;
 
-        gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+        gl.bindBuffer(gl.ARRAY_BUFFER, colorsBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
 
-        return vertexBuffer;
+        this.position  = [1.5, 0.0, -7.0];
+        this.positions = positionsBuffer;
+        this.colors    = colorsBuffer;
+        this.rotation  = 0;
+
+        this.draw = function(program, perspectiveMatrix, movementMatrix) {
+            mat4.translate(movementMatrix, this.position);
+            mat4.rotate(movementMatrix, degreesToRadians(this.rotation), [1, 0, 0]);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.positions);
+            gl.vertexAttribPointer(program.vertexPositionAttribute, this.positions.itemSize, gl.FLOAT, false, 0, 0);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.colors);
+            gl.vertexAttribPointer(program.vertexColorAttribute, this.colors.itemSize, gl.FLOAT, false, 0, 0);
+
+            setMatrixUniforms(program, perspectiveMatrix, movementMatrix);
+            gl.drawArrays(gl.TRIANGLE_STRIP, 0, this.positions.numItems);
+        };
+        this.animate = function(elapsed) {
+            this.rotation += (75 * elapsed) / 1000.0;
+        };
     };
 
     /**
@@ -219,30 +245,11 @@ $(function() {
         mat4.perspective(viewAngle, aspectRatio, viewDistanceMin, viewDistanceMax, perspectiveMatrix);
         mat4.identity(movementMatrix);
 
-        pushMovementMatrix();
-
-        mat4.translate(movementMatrix, [-1.5, 0.0, -7.0]);
-        mat4.rotate(movementMatrix, degreesToRadians(rotationTriangle), [0, 1, 0]);
-        gl.bindBuffer(gl.ARRAY_BUFFER, triangleVertexBuffer);
-        gl.vertexAttribPointer(program.vertexPositionAttribute, triangleVertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
-        gl.bindBuffer(gl.ARRAY_BUFFER, triangleColorBuffer);
-        gl.vertexAttribPointer(program.vertexColorAttribute, triangleColorBuffer.itemSize, gl.FLOAT, false, 0, 0);
-        setMatrixUniforms();
-        gl.drawArrays(gl.TRIANGLES, 0, triangleVertexBuffer.numItems);
-
-        popMovementMatrix();
-        pushMovementMatrix();
-
-        mat4.translate(movementMatrix, [1.5, 0.0, -7.0]);
-        mat4.rotate(movementMatrix, degreesToRadians(rotationSquare), [1, 0, 0]);
-        gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexBuffer);
-        gl.vertexAttribPointer(program.vertexPositionAttribute, squareVertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
-        gl.bindBuffer(gl.ARRAY_BUFFER, squareColorBuffer);
-        gl.vertexAttribPointer(program.vertexColorAttribute, squareColorBuffer.itemSize, gl.FLOAT, false, 0, 0);
-        setMatrixUniforms();
-        gl.drawArrays(gl.TRIANGLE_STRIP, 0, squareVertexBuffer.numItems);
-
-        popMovementMatrix();
+        objects.forEach(function(object) {
+            pushMovementMatrix();
+            object.draw(program, perspectiveMatrix, movementMatrix);
+            popMovementMatrix();
+        });
     };
 
     var prevTime = new Date().getTime();
@@ -254,8 +261,9 @@ $(function() {
         var newTime = new Date().getTime();
         var elapsed = newTime - prevTime;
 
-        rotationTriangle += (90 * elapsed) / 1000.0;
-        rotationSquare   += (75 * elapsed) / 1000.0;
+        objects.forEach(function(object) {
+            object.animate(elapsed);
+        });
 
         prevTime = newTime;
     };
@@ -295,13 +303,9 @@ $(function() {
     var movementMatrix = mat4.create();
     var movementMatrixStack = [];
 
-    var triangleVertexBuffer = createTriangleVertices();
-    var triangleColorBuffer = createTriangleColorVertices();
-    var rotationTriangle = 0;
-
-    var squareVertexBuffer = createSquareVertices();
-    var squareColorBuffer = createSquareColorVertices();
-    var rotationSquare = 0;
+    var triangle = new Triangle();
+    var square = new Square();
+    var objects = [triangle, square];
 
     tick();
 });
