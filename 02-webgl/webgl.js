@@ -128,7 +128,7 @@ $(function() {
     /**
      * Create a triangle.
      */
-    var Triangle = function() {
+    var Triangle = function(position) {
         var positions = [
              0.0,  1.0,  0.0,
             -1.0, -1.0,  0.0,
@@ -153,7 +153,7 @@ $(function() {
         gl.bindBuffer(gl.ARRAY_BUFFER, colorsBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
 
-        this.position  = [-1.5, 1.5, -10.0];
+        this.position  = position;
         this.positions = positionsBuffer;
         this.colors    = colorsBuffer;
         this.rotation  = 0;
@@ -179,7 +179,7 @@ $(function() {
     /**
      * Create a square.
      */
-    var Square = function() {
+    var Square = function(position) {
         var positions = [
              1.0,  1.0,  0.0,
             -1.0,  1.0,  0.0,
@@ -207,7 +207,7 @@ $(function() {
         gl.bindBuffer(gl.ARRAY_BUFFER, colorsBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
 
-        this.position  = [1.5, 1.5, -10.0];
+        this.position  = position;
         this.positions = positionsBuffer;
         this.colors    = colorsBuffer;
         this.rotation  = 0;
@@ -233,7 +233,7 @@ $(function() {
     /**
      * Create a pyramid.
      */
-    var Pyramid = function() {
+    var Pyramid = function(position) {
         var positions = [
             // Front face
              0.0,  1.0,  0.0,
@@ -284,7 +284,7 @@ $(function() {
         gl.bindBuffer(gl.ARRAY_BUFFER, colorsBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
 
-        this.position  = [-1.5, -1.5, -10.0];
+        this.position  = position;
         this.positions = positionsBuffer;
         this.colors    = colorsBuffer;
         this.rotation  = 0;
@@ -312,7 +312,7 @@ $(function() {
     /**
      * Create a cube.
      */
-    var Cube = function() {
+    var Cube = function(position) {
         var positions = [
             // Front face
             -1.0, -1.0,  1.0,
@@ -397,7 +397,7 @@ $(function() {
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexesBuffer);
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indexes), gl.STATIC_DRAW);
 
-        this.position  = [1.5, -1.5, -10.0];
+        this.position  = position;
         this.indexes   = indexesBuffer;
         this.positions = positionsBuffer;
         this.colors    = colorsBuffer;
@@ -498,10 +498,10 @@ $(function() {
     var movementMatrixStack = [];
 
     var objects = [
-        new Triangle(),
-        new Square(),
-        new Pyramid(),
-        new Cube()
+        new Triangle([-1.5,  1.5, -10.0]),
+        new Square(  [ 1.5,  1.5, -10.0]),
+        new Pyramid( [-1.5, -1.5, -10.0]),
+        new Cube(    [ 1.5, -1.5, -10.0])
     ];
 
     tick();
