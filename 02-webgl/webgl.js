@@ -2,6 +2,11 @@
 
 $(function() {
 
+    /**
+     * Initialize the canvas.
+     * @param {String} canvas jQuery selector for the canvas object
+     * @return initialized WebGL object
+     */
     var initGl = function(canvas) {
         // canvas expects width/height attributes
         $(canvas).attr('width', $(window).width());
@@ -23,6 +28,12 @@ $(function() {
         return gl;
     }
 
+    /**
+     * Create a shader from the text content of a script tag. The script tag
+     * must have a type attribute containing either: x-shader/x-vertex or
+     * x-shader/x-fragment.
+     * @param {String} selector script tag selector for the glsl code
+     */
     var getShaderGlsl = function(selector) {
         var definition = $(selector).text();
         var type = $(selector).attr('type');
@@ -50,6 +61,13 @@ $(function() {
         return shader;
     };
 
+    /**
+     * Create a program and attach the vertex and fragment shaders to it.
+     * Shader variables are attached to the program.
+     * @param {Object} vertexShader the vertex shader
+     * @param {Object} fragmentShader the fragment shader
+     * @return the initialized program
+     */
     var initShaders = function(vertexShader, fragmentShader) {
         var program = gl.createProgram();
 
@@ -74,26 +92,43 @@ $(function() {
         return program;
     }
 
+    /**
+     * Push the current movement matrix onto the stack.
+     */
     var pushMovementMatrix = function() {
         var copy = mat4.create();
         mat4.set(movementMatrix, copy);
         movementMatrixStack.push(copy);
     };
 
+    /**
+     * Pop the previous movement matrix from the stack.
+     */
     var popMovementMatrix = function() {
         movementMatrix = movementMatrixStack.pop();
     };
 
+    /**
+     * Convert from degrees to radians.
+     * @param {Float} degrees the degrees
+     * @return {Float} the radians
+     */
     var degreesToRadians = function(degrees) {
         return degrees * Math.PI / 180;
     }
 
+    /**
+     * Update the buffered position and perspective matrix uniforms.
+     */
     var setMatrixUniforms = function() {
         gl.uniformMatrix4fv(program.perspectiveMatrixUniform, false, perspectiveMatrix);
         gl.uniformMatrix4fv(program.movementMatrixUniform, false, movementMatrix);
     };
 
-    var drawTriangle = function() {
+    /**
+     * Create a triangles vertices.
+     */
+    var createTriangleVertices = function() {
         var vertices = [
              0.0,  1.0,  0.0,
             -1.0, -1.0,  0.0,
@@ -109,7 +144,10 @@ $(function() {
         return vertexBuffer;
     };
 
-    var colorTriangle = function() {
+    /**
+     * Create a triangles color vertices.
+     */
+    var createTriangleColorVertices = function() {
         var vertices = [
              1.0,  0.0,  0.0, 1.0,
              0.0,  1.0,  0.0, 1.0,
@@ -125,7 +163,10 @@ $(function() {
         return vertexBuffer;
     };
 
-    var drawSquare = function() {
+    /**
+     * Create a squares vertices.
+     */
+    var createSquareVertices = function() {
         var vertices = [
              1.0,  1.0,  0.0,
             -1.0,  1.0,  0.0,
@@ -143,7 +184,10 @@ $(function() {
         return vertexBuffer;
     };
 
-    var colorSquare = function() {
+    /**
+     * Create a squares color vertices.
+     */
+    var createSquareColorVertices = function() {
         var vertices = [
              0.5,  0.5,  1.0, 1.0,
              0.5,  0.5,  1.0, 1.0,
@@ -160,6 +204,9 @@ $(function() {
         return vertexBuffer;
     };
 
+    /**
+     * Draw the scene.
+     */
     var drawScene = function() {
         gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -199,6 +246,10 @@ $(function() {
     };
 
     var prevTime = new Date().getTime();
+
+    /**
+     * Animate the scene.
+     */
     var animate = function() {
         var newTime = new Date().getTime();
         var elapsed = newTime - prevTime;
@@ -209,8 +260,14 @@ $(function() {
         prevTime = newTime;
     };
 
+    /**
+     * Browser independent function used to request that the browser run the
+     * provided callback when it next can. If the tab is out of focus, this
+     * should prevent needless utilization of the GPU.
+     * @param {function} callback the callback to execute
+     */
     var requestAnimFrame = function(callback) {
-        return window.requestAnimationFrame(callback)
+        window.requestAnimationFrame(callback)
             || window.webkitRequestAnimationFrame(callback)
             || window.mozRequestAnimationFrame(callback)
             || window.oRequestAnimationFrame(callback)
@@ -218,6 +275,10 @@ $(function() {
             || function(callback) { window.setTimeout(callback, 1000 / 60); };
     }
 
+    /**
+     * Draw the scene and execute the animate function. Additionally requeue
+     * this function for execution.
+     */
     var tick = function() {
         requestAnimFrame(tick);
 
@@ -226,20 +287,20 @@ $(function() {
     };
 
     var gl = initGl('#canvas');
-    var vertexShader = getShaderGlsl('#2d-shader-vertex');
+    var vertexShader   = getShaderGlsl('#2d-shader-vertex');
     var fragmentShader = getShaderGlsl('#2d-shader-fragment');
     var program = initShaders(vertexShader, fragmentShader);
 
     var perspectiveMatrix = mat4.create();
     var movementMatrix = mat4.create();
-
     var movementMatrixStack = [];
 
-    var triangleVertexBuffer = drawTriangle();
-    var squareVertexBuffer = drawSquare();
-    var triangleColorBuffer = colorTriangle();
-    var squareColorBuffer = colorSquare();
+    var triangleVertexBuffer = createTriangleVertices();
+    var triangleColorBuffer = createTriangleColorVertices();
     var rotationTriangle = 0;
+
+    var squareVertexBuffer = createSquareVertices();
+    var squareColorBuffer = createSquareColorVertices();
     var rotationSquare = 0;
 
     tick();
