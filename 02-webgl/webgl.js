@@ -93,6 +93,23 @@ $(function() {
     }
 
     /**
+     * Get a texture from a URL.
+     */
+    var getTexture = function(url) {
+        var texture = gl.createTexture();
+        texture.image = new Image();
+        texture.image.onload = function() {
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, texture.image);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+            gl.bindTexture(gl.TEXTURE_2D, null);
+        };
+        texture.image.src = url;
+    };
+
+    /**
      * Push the current movement matrix onto the stack.
      */
     var pushMovementMatrix = function() {
@@ -496,6 +513,8 @@ $(function() {
     var perspectiveMatrix = mat4.create();
     var movementMatrix = mat4.create();
     var movementMatrixStack = [];
+
+    var crate = getTexture('crate.gif');
 
     var objects = [
         new Triangle([-1.5,  1.5, -10.0]),
