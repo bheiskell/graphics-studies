@@ -99,15 +99,18 @@ $(function() {
     /**
      * Get a texture from a URL.
      */
-    var getTexture = function(url) {
+    var getTexture = function(url, magFilter, minFilter) {
         var texture = gl.createTexture();
         texture.image = new Image();
         texture.image.onload = function() {
-            gl.bindTexture(gl.TEXTURE_2D, texture);
             gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+
+            gl.bindTexture(gl.TEXTURE_2D, texture);
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, texture.image);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, magFilter);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, minFilter);
+            gl.generateMipmap(gl.TEXTURE_2D);
+
             gl.bindTexture(gl.TEXTURE_2D, null);
         };
         texture.image.src = url;
@@ -340,7 +343,7 @@ $(function() {
     /**
      * Create a cube.
      */
-    var Cube = function(position, texture) {
+    var Cube = function(position, textureArray) {
         var positions = [
             // Front face
             -1.0, -1.0,  1.0,
@@ -471,7 +474,7 @@ $(function() {
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indexes), gl.STATIC_DRAW);
 
         this.position  = position;
-        this.texture   = texture;
+        this.texture   = 0;
         this.indexes   = indexesBuffer;
         this.positions = positionsBuffer;
         this.colors    = colorsBuffer;
@@ -492,9 +495,9 @@ $(function() {
             gl.vertexAttribPointer(program.textureCoordAttribute, this.textures.itemSize, gl.FLOAT, false, 0, 0);
 
             gl.activeTexture(gl.TEXTURE0);
-            gl.bindTexture(gl.TEXTURE_2D, this.texture);
+            gl.bindTexture(gl.TEXTURE_2D, textureArray !== undefined ? textureArray[this.texture] : null);
             gl.uniform1i(program.samplerUniform, 0);
-            gl.uniform1i(program.useTextureUniform, this.texture !== undefined);
+            gl.uniform1i(program.useTextureUniform, textureArray !== undefined);
 
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexes);
 
@@ -504,6 +507,11 @@ $(function() {
         };
         this.animate = function(elapsed) {
             this.rotation += (90 * elapsed) / 1000.0;
+        };
+        this.keypress = function(type, input) {
+            if (input === 'U') {
+                this.texture = (this.texture + 1) % 3;
+            }
         };
     };
 
@@ -522,6 +530,9 @@ $(function() {
         mat4.perspective(viewAngle, aspectRatio, viewDistanceMin, viewDistanceMax, perspectiveMatrix);
         mat4.identity(movementMatrix);
 
+        mat4.rotate(movementMatrix, degreesToRadians(-scene.roty), [0, 1, 0]);
+        mat4.translate(movementMatrix, [-scene.x, -scene.y, -scene.z]);
+
         objects.forEach(function(object) {
             pushMovementMatrix();
             object.draw(program, perspectiveMatrix, movementMatrix);
@@ -536,7 +547,7 @@ $(function() {
     /**
      * Animate the scene.
      */
-    var animate = function() {
+    var animate = function(scene, currentKeys) {
         var newTime = new Date().getTime();
         var elapsed = newTime - prevTime;
 
@@ -551,6 +562,38 @@ $(function() {
             framesCount = 0;
             framesTime = 0;
         }
+
+        if (currentKeys[32]) { // up
+            scene.y += 0.01 * elapsed;
+        } else if (currentKeys[16]) { // down
+            scene.y -= 0.01 * elapsed;
+        }
+
+        if (currentKeys[222]) { // turn left
+            scene.roty += 0.1 * elapsed;
+        } else if (currentKeys[190]) { // turn right
+            scene.roty -= 0.1 * elapsed;
+        }
+
+        var speed = 0;
+        if (currentKeys[188]) { // forward
+            speed = 1;
+        } else if (currentKeys[79]) { // backwards
+            speed = -1;
+        }
+
+        var strafeSpeed = 0;
+        if (currentKeys[65]) { // left
+            strafeSpeed = 1;
+        } else if (currentKeys[69]) { // right
+            strafeSpeed = -1;
+        }
+
+        scene.x -= 0.01 * elapsed * Math.sin(degreesToRadians(scene.roty)) * speed;
+        scene.z -= 0.01 * elapsed * Math.cos(degreesToRadians(scene.roty)) * speed;
+
+        scene.x -= 0.01 * elapsed * Math.sin(degreesToRadians(scene.roty + 90)) * strafeSpeed;
+        scene.z -= 0.01 * elapsed * Math.cos(degreesToRadians(scene.roty + 90)) * strafeSpeed;
 
         prevTime = newTime;
     };
@@ -577,8 +620,28 @@ $(function() {
     var tick = function() {
         requestAnimFrame(tick);
 
-        drawScene();
-        animate();
+        drawScene(scene);
+        animate(scene, currentKeys);
+    };
+
+    var currentKeys = {};
+
+    /**
+     * Dispatch input events to object event handlers.
+     * @param {Object} event the event to handle
+     */
+    var handleInput = function(type, event) {
+        if (type === 'down' && currentKeys[event.keyCode] === true) {
+            return;
+        }
+
+        objects.forEach(function(object) {
+            if (object.keypress) {
+                object.keypress(type, String.fromCharCode(event.keyCode));
+            }
+        });
+
+        currentKeys[event.keyCode] = type === 'down';
     };
 
     var gl = initGl('#canvas');
@@ -590,15 +653,32 @@ $(function() {
     var movementMatrix = mat4.create();
     var movementMatrixStack = [];
 
-    var crate = getTexture('crate.gif');
+    var scene = {
+        x:   0.0,
+        y:   0.0,
+        z:  10.0,
+
+        rotx: 0.0,
+        roty: 0.0,
+        rotz: 0.0,
+    };
+
+    var crates = [
+        getTexture('crate.gif', gl.LINEAR,  gl.LINEAR_MIPMAP_NEAREST),
+        getTexture('crate.gif', gl.NEAREST, gl.NEAREST),
+        getTexture('crate.gif', gl.LINEAR,  gl.LINEAR)
+    ];
 
     var objects = [
-        new Cube(    [-4.5, -1.5, -10.0], crate),
-        new Triangle([-1.5,  1.5, -10.0]),
-        new Square(  [ 1.5,  1.5, -10.0]),
-        new Pyramid( [-1.5, -1.5, -10.0]),
-        new Cube(    [ 1.5, -1.5, -10.0])
+        new Cube(    [-4.5, -1.5, 0.0], crates),
+        new Triangle([-1.5,  1.5, 0.0]),
+        new Square(  [ 1.5,  1.5, 0.0]),
+        new Pyramid( [-1.5, -1.5, 0.0]),
+        new Cube(    [ 1.5, -1.5, 0.0])
     ];
+
+    $(document).keydown(function(e) { handleInput('down', e); });
+    $(document).keyup(function(e)   { handleInput('up', e); });
 
     tick();
 });
