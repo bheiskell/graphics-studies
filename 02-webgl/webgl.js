@@ -544,6 +544,8 @@ $(function() {
     var framesCount = 0;
     var framesTime = 0;
 
+    var round2 = function(num) { return Math.round(100 * num) / 100; }
+
     /**
      * Animate the scene.
      */
@@ -558,7 +560,13 @@ $(function() {
         framesCount++;
         framesTime += elapsed;
         if (framesTime > 1000) {
-            $('#fps-counter').text(Math.round( 10000 * framesCount / framesTime) / 10);
+            $('#fps-counter').text('' +
+                round2(1000 * framesCount / framesTime) + ' (' +
+                round2(scene.x) + ', ' +
+                round2(scene.y) + ', ' +
+                round2(scene.z) + ') (' +
+                round2(scene.roty) + ') ' +
+                '');
             framesCount = 0;
             framesTime = 0;
         }
