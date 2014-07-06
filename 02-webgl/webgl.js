@@ -13,7 +13,7 @@ $(function() {
         $(canvas).attr('height', $(window).height());
 
         try {
-            var gl = $(canvas).get(0).getContext('experimental-webgl');
+            var gl = $(canvas).get(0).getContext('webgl');
         } catch(e) {
             console.log('Could not initialize webgl');
             return null;
@@ -24,6 +24,8 @@ $(function() {
 
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
         gl.enable(gl.DEPTH_TEST);
+
+        console.log('Antialiasing:', gl.getParameter(gl.SAMPLES));
 
         return gl;
     }
