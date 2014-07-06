@@ -9,7 +9,7 @@ $(function() {
      */
     var initGl = function(canvas) {
         // canvas expects width/height attributes
-        $(canvas).attr('width', $(window).width());
+        $(canvas).attr('width', $(canvas).width());
         $(canvas).attr('height', $(window).height());
 
         try {

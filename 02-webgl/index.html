@@ -4,7 +4,6 @@
     <title>WebGL</title>
     <script src="http://code.jquery.com/jquery-2.1.1.min.js" type="text/javascript"></script>
     <script src="glMatrix-0.9.5.min.js" type="text/javascript"></script>
-    <script src="webgl.js" type="text/javascript"></script>
 
     <script type="x-shader/x-vertex" id="2d-shader-vertex">
         attribute vec3 aVertexPosition;
@@ -43,6 +42,17 @@
     </script>
 
     <style>
+        #container {
+            display: table;
+            width: 100%;
+        }
+        #container>div {
+            display: table-cell;
+            vertical-align: top;
+        }
+        #container>div:last-child {
+            width: 300px;
+        }
         canvas {
             width: 100%;
             height: 100%;
@@ -56,12 +66,135 @@
             width: 100px;
             z-index: 1000;
         }
-  </body>
+
+        label {
+            display: block;
+            line-height: 1.5em;
+            position: relative;
+        }
+        label input[type=text] {
+            position: absolute;
+            display: inline-block;
+            left: 100px;
+        }
     </style>
   </body>
 </head>
 <body>
-    <canvas id="canvas"></canvas>
+    <div id="container">
+        <div>
+            <canvas id="canvas"></canvas>
+        </div>
+        <div>
+            <form>
+                <fieldset>
+                    <legend>Lighting</legend>
+                    <label><input type="checkbox" name="useDirectionalLighting" />Use Directional Lighting</label>
+                    <label><input type="checkbox" name="usePointLighting" />Use Point Lighting</label>
+                    <label><input type="checkbox" name="useSpecularLighting" />Use Specular Lighting</label>
+                    <label><input type="checkbox" name="usePerFragmentLighting" />Use Per Fragment Lighting</label>
+                </fieldset>
+                <fieldset>
+                    <legend>Directional</legend>
+                    <label>X: <input type="text" name="directionalX" /></label>
+                    <label>Y: <input type="text" name="directionalY" /></label>
+                    <label>Z: <input type="text" name="directionalZ" /></label>
+                    <label>RGB: <input type="text" name="directionalRGB" /></label>
+                </fieldset>
+                <fieldset>
+                    <legend>Point</legend>
+                    <label>X: <input type="text" name="pointX" /></label>
+                    <label>Y: <input type="text" name="pointY" /></label>
+                    <label>Z: <input type="text" name="pointZ" /></label>
+                </fieldset>
+                <fieldset>
+                    <legend>Colors</legend>
+                    <label>Ambient RGB: <input type="text" name="ambientRGB" /></label>
+                    <label>Diffuse RGB: <input type="text" name="diffuseRGB" /></label>
+                    <label>Specular RGB: <input type="text" name="specularRGB" /></label>
+                </fieldset>
+                <fieldset>
+                    <legend>Alpha Blending</legend>
+                    <label><input type="checkbox" name="useBlending" />Use Blending</label>
+                    <label>Alpha: <input type="text" name="alpha" /></label>
+                </fieldset>
+            </form>
+        </div>
+    </div>
     <div id="fps-counter"></div>
+    <script>
+        var settings = {
+            useDirectionalLighting: true,
+            usePointLighting: false,
+            useSpecularLighting: false,
+            usePerFragmentLighting: false,
+
+            directionalX: -0.25,
+            directionalY: -0.25,
+            directionalZ: -1.0,
+
+            directionalRGB: '#eeeeee',
+
+            pointX:  0.0,
+            pointY:  0.0,
+            pointZ: -10.0,
+
+            diffuseRGB: '#eeeeee',
+            specularRGB: '#ffcccc',
+
+            ambientRGB: '#222222',
+
+            useBlending: false,
+            alpha: 0.5,
+        };
+
+        var updateForm = function() {
+            $.each(settings, function(key, value) {
+
+                var input = $('input[name=' + key + ']');
+
+                if (input.filter('[type=checkbox]').length === 1) {
+                    input.attr('checked', value);
+                } else {
+                    input.val(value);
+                }
+            });
+        };
+
+        var updateModelElement = function(name, value) {
+            settings[name] = value;
+            if (name.indexOf('RGB', name.length - 'RGB'.length) !== -1) {
+                var prefix = name.substring(0, name.length - 'RGB'.length);
+                var rgb = htmlToRgb(value);
+                settings[prefix + 'R'] = rgb.r;
+                settings[prefix + 'G'] = rgb.g;
+                settings[prefix + 'B'] = rgb.b;
+            }
+        };
+
+        var htmlToRgb = function(hex) {
+            var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : null;
+        }
+
+        $(function() {
+            $('input').change(function() {
+                updateModelElement($(this).attr('name'), $(this).val());
+                //console.log(settings);
+            })
+            .keyup(function(e) { e.stopPropagation(); })
+            .keydown(function(e) { e.stopPropagation(); });
+
+            $.each(settings, function(key, value) {
+                updateModelElement(key, value);
+            });
+            updateForm();
+        });
+    </script>
+    <script src="webgl.js" type="text/javascript"></script>
 </body>
 </html>
