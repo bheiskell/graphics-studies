@@ -94,6 +94,7 @@ $(function() {
         program.movementMatrixUniform = gl.getUniformLocation(program, 'uMovementMatrix');
         program.samplerUniform = gl.getUniformLocation(program, 'uSampler');
         program.useTextureUniform = gl.getUniformLocation(program, 'uUseTexture');
+        program.useDirectionalLighting = gl.getUniformLocation(program, 'uUseDirectionalLighting');
 
         return program;
     }
@@ -520,7 +521,7 @@ $(function() {
     /**
      * Draw the scene.
      */
-    var drawScene = function() {
+    var drawScene = function(scene, settings) {
         gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
@@ -528,6 +529,8 @@ $(function() {
         var aspectRatio = gl.viewportWidth / gl.viewportHeight;
         var viewDistanceMin = 0.1;
         var viewDistanceMax = 100.0;
+
+        gl.uniform1i(program.useDirectionalLighting, settings.useDirectionalLighting);
 
         mat4.perspective(viewAngle, aspectRatio, viewDistanceMin, viewDistanceMax, perspectiveMatrix);
         mat4.identity(movementMatrix);
@@ -630,7 +633,7 @@ $(function() {
     var tick = function() {
         requestAnimFrame(tick);
 
-        drawScene(scene);
+        drawScene(scene, settings);
         animate(scene, currentKeys);
     };
 

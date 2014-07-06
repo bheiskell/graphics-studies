@@ -27,13 +27,14 @@
         precision mediump float;
 
         uniform bool uUseTexture;
+        uniform bool uUseDirectionalLighting;
         uniform sampler2D uSampler;
 
         varying vec2 vTextureCoord;
         varying vec4 vColor;
 
         void main(void) {
-            if (uUseTexture) {
+            if (uUseTexture && uUseDirectionalLighting) {
                 gl_FragColor = texture2D(uSampler, vTextureCoord.st);
             } else {
                 gl_FragColor = vColor;
@@ -188,8 +189,12 @@
 
         $(function() {
             $('input').change(function() {
-                updateModelElement($(this).attr('name'), $(this).val());
-                //console.log(settings);
+                if ($(this).filter('[type=checkbox]').length === 1) {
+                    updateModelElement($(this).attr('name'), $(this).is(':checked'));
+                } else {
+                    updateModelElement($(this).attr('name'), $(this).val());
+                }
+                console.log(settings);
             })
             .keyup(function(e) { e.stopPropagation(); })
             .keydown(function(e) { e.stopPropagation(); });
