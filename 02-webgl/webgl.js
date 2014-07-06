@@ -530,6 +530,8 @@ $(function() {
     };
 
     var prevTime = new Date().getTime();
+    var framesCount = 0;
+    var framesTime = 0;
 
     /**
      * Animate the scene.
@@ -541,6 +543,14 @@ $(function() {
         objects.forEach(function(object) {
             object.animate(elapsed);
         });
+
+        framesCount++;
+        framesTime += elapsed;
+        if (framesTime > 1000) {
+            $('#fps-counter').text(Math.round( 10000 * framesCount / framesTime) / 10);
+            framesCount = 0;
+            framesTime = 0;
+        }
 
         prevTime = newTime;
     };
@@ -583,11 +593,11 @@ $(function() {
     var crate = getTexture('crate.gif');
 
     var objects = [
+        new Cube(    [-4.5, -1.5, -10.0], crate),
         new Triangle([-1.5,  1.5, -10.0]),
         new Square(  [ 1.5,  1.5, -10.0]),
         new Pyramid( [-1.5, -1.5, -10.0]),
-        new Cube(    [ 1.5, -1.5, -10.0]),
-        new Cube(    [-4.5, -1.5, -10.0], crate)
+        new Cube(    [ 1.5, -1.5, -10.0])
     ];
 
     tick();
