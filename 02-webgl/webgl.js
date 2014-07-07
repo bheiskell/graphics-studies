@@ -158,7 +158,14 @@ $(function() {
     var setMatrixUniforms = function(program, perspectiveMatrix, modelViewMatrix) {
         gl.uniformMatrix4fv(program.perspectiveMatrixUniform, false, perspectiveMatrix);
         gl.uniformMatrix4fv(program.modelViewMatrixUniform, false, modelViewMatrix);
+    };
 
+    /**
+     * Update the normal uniform. This should only be called with the rotation
+     * of the object. Otherwise, the scene rotation will be taken into account,
+     * which will make the light appear fixed regardless of scene rotation.
+     */
+    var setNormalUniform = function(program, modelViewMatrix) {
         var normalMatrix = mat3.create();
         mat4.toInverseMat3(modelViewMatrix, normalMatrix);
         mat3.transpose(normalMatrix);
@@ -212,6 +219,11 @@ $(function() {
         this.rotation  = 0;
 
         this.draw = function(program, perspectiveMatrix, modelViewMatrix) {
+            var rotationOnly = mat4.create();
+            mat4.identity(rotationOnly);
+            mat4.rotate(rotationOnly, degreesToRadians(this.rotation), [0, 1, 0]);
+            setNormalUniform(program, rotationOnly);
+
             mat4.translate(modelViewMatrix, this.position);
             mat4.rotate(modelViewMatrix, degreesToRadians(this.rotation), [0, 1, 0]);
 
@@ -285,6 +297,11 @@ $(function() {
         this.rotation  = 0;
 
         this.draw = function(program, perspectiveMatrix, modelViewMatrix) {
+            var rotationOnly = mat4.create();
+            mat4.identity(rotationOnly);
+            mat4.rotate(rotationOnly, degreesToRadians(this.rotation), [1, 0, 0]);
+            setNormalUniform(program, rotationOnly);
+
             mat4.translate(modelViewMatrix, this.position);
             mat4.rotate(modelViewMatrix, degreesToRadians(this.rotation), [1, 0, 0]);
 
@@ -393,6 +410,11 @@ $(function() {
         this.rotation  = 0;
 
         this.draw = function(program, perspectiveMatrix, modelViewMatrix) {
+            var rotationOnly = mat4.create();
+            mat4.identity(rotationOnly);
+            mat4.rotate(rotationOnly, degreesToRadians(this.rotation), [0, 1, 0]);
+            setNormalUniform(program, rotationOnly);
+
             mat4.translate(modelViewMatrix, this.position);
             mat4.rotate(modelViewMatrix, degreesToRadians(this.rotation), [0, 1, 0]);
 
@@ -604,6 +626,11 @@ $(function() {
         this.rotation  = 0;
 
         this.draw = function(program, perspectiveMatrix, modelViewMatrix) {
+            var rotationOnly = mat4.create();
+            mat4.identity(rotationOnly);
+            mat4.rotate(rotationOnly, degreesToRadians(this.rotation), [1, 1, 1]);
+            setNormalUniform(program, rotationOnly);
+
             mat4.translate(modelViewMatrix, this.position);
             mat4.rotate(modelViewMatrix, degreesToRadians(this.rotation), [1, 1, 1]);
 
