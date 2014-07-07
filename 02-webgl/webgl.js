@@ -93,7 +93,7 @@ $(function() {
         gl.enableVertexAttribArray(program.textureCoordAttribute);
 
         program.perspectiveMatrixUniform = gl.getUniformLocation(program, 'uPerspectiveMatrix');
-        program.movementMatrixUniform = gl.getUniformLocation(program, 'uMovementMatrix');
+        program.modelViewMatrixUniform = gl.getUniformLocation(program, 'uModelViewMatrix');
         program.normalMatrixUniform = gl.getUniformLocation(program, 'uNormalMatrix');
         program.samplerUniform = gl.getUniformLocation(program, 'uSampler');
         program.useTextureUniform = gl.getUniformLocation(program, 'uUseTexture');
@@ -128,19 +128,19 @@ $(function() {
     };
 
     /**
-     * Push the current movement matrix onto the stack.
+     * Push the current modelView matrix onto the stack.
      */
-    var pushMovementMatrix = function() {
+    var pushModelViewMatrix = function() {
         var copy = mat4.create();
-        mat4.set(movementMatrix, copy);
-        movementMatrixStack.push(copy);
+        mat4.set(modelViewMatrix, copy);
+        modelViewMatrixStack.push(copy);
     };
 
     /**
-     * Pop the previous movement matrix from the stack.
+     * Pop the previous modelView matrix from the stack.
      */
-    var popMovementMatrix = function() {
-        movementMatrix = movementMatrixStack.pop();
+    var popModelViewMatrix = function() {
+        modelViewMatrix = modelViewMatrixStack.pop();
     };
 
     /**
@@ -155,12 +155,12 @@ $(function() {
     /**
      * Update the buffered position and perspective matrix uniforms.
      */
-    var setMatrixUniforms = function(program, perspectiveMatrix, movementMatrix) {
+    var setMatrixUniforms = function(program, perspectiveMatrix, modelViewMatrix) {
         gl.uniformMatrix4fv(program.perspectiveMatrixUniform, false, perspectiveMatrix);
-        gl.uniformMatrix4fv(program.movementMatrixUniform, false, movementMatrix);
+        gl.uniformMatrix4fv(program.modelViewMatrixUniform, false, modelViewMatrix);
 
         var normalMatrix = mat3.create();
-        mat4.toInverseMat3(movementMatrix, normalMatrix);
+        mat4.toInverseMat3(modelViewMatrix, normalMatrix);
         mat3.transpose(normalMatrix);
         gl.uniformMatrix3fv(program.normalMatrixUniform, false, normalMatrix);
     };
@@ -211,9 +211,9 @@ $(function() {
         this.colors    = colorsBuffer;
         this.rotation  = 0;
 
-        this.draw = function(program, perspectiveMatrix, movementMatrix) {
-            mat4.translate(movementMatrix, this.position);
-            mat4.rotate(movementMatrix, degreesToRadians(this.rotation), [0, 1, 0]);
+        this.draw = function(program, perspectiveMatrix, modelViewMatrix) {
+            mat4.translate(modelViewMatrix, this.position);
+            mat4.rotate(modelViewMatrix, degreesToRadians(this.rotation), [0, 1, 0]);
 
             gl.bindBuffer(gl.ARRAY_BUFFER, this.positions);
             gl.vertexAttribPointer(program.vertexPositionAttribute, this.positions.itemSize, gl.FLOAT, false, 0, 0);
@@ -226,7 +226,7 @@ $(function() {
 
             gl.uniform1i(program.useTextureUniform, false);
 
-            setMatrixUniforms(program, perspectiveMatrix, movementMatrix);
+            setMatrixUniforms(program, perspectiveMatrix, modelViewMatrix);
             gl.drawArrays(gl.TRIANGLES, 0, this.positions.numItems);
         };
         this.animate = function(elapsed) {
@@ -284,9 +284,9 @@ $(function() {
         this.colors    = colorsBuffer;
         this.rotation  = 0;
 
-        this.draw = function(program, perspectiveMatrix, movementMatrix) {
-            mat4.translate(movementMatrix, this.position);
-            mat4.rotate(movementMatrix, degreesToRadians(this.rotation), [1, 0, 0]);
+        this.draw = function(program, perspectiveMatrix, modelViewMatrix) {
+            mat4.translate(modelViewMatrix, this.position);
+            mat4.rotate(modelViewMatrix, degreesToRadians(this.rotation), [1, 0, 0]);
 
             gl.bindBuffer(gl.ARRAY_BUFFER, this.positions);
             gl.vertexAttribPointer(program.vertexPositionAttribute, this.positions.itemSize, gl.FLOAT, false, 0, 0);
@@ -299,7 +299,7 @@ $(function() {
 
             gl.uniform1i(program.useTextureUniform, false);
 
-            setMatrixUniforms(program, perspectiveMatrix, movementMatrix);
+            setMatrixUniforms(program, perspectiveMatrix, modelViewMatrix);
             gl.drawArrays(gl.TRIANGLE_STRIP, 0, this.positions.numItems);
         };
         this.animate = function(elapsed) {
@@ -392,9 +392,9 @@ $(function() {
         this.colors    = colorsBuffer;
         this.rotation  = 0;
 
-        this.draw = function(program, perspectiveMatrix, movementMatrix) {
-            mat4.translate(movementMatrix, this.position);
-            mat4.rotate(movementMatrix, degreesToRadians(this.rotation), [0, 1, 0]);
+        this.draw = function(program, perspectiveMatrix, modelViewMatrix) {
+            mat4.translate(modelViewMatrix, this.position);
+            mat4.rotate(modelViewMatrix, degreesToRadians(this.rotation), [0, 1, 0]);
 
             gl.bindBuffer(gl.ARRAY_BUFFER, this.positions);
             gl.vertexAttribPointer(program.vertexPositionAttribute, this.positions.itemSize, gl.FLOAT, false, 0, 0);
@@ -405,12 +405,12 @@ $(function() {
             gl.bindBuffer(gl.ARRAY_BUFFER, this.colors);
             gl.vertexAttribPointer(program.vertexColorAttribute, this.colors.itemSize, gl.FLOAT, false, 0, 0);
 
-            setMatrixUniforms(program, perspectiveMatrix, movementMatrix);
+            setMatrixUniforms(program, perspectiveMatrix, modelViewMatrix);
             gl.drawArrays(gl.TRIANGLES, 0, this.positions.numItems);
 
             gl.uniform1i(program.useTextureUniform, false);
 
-            setMatrixUniforms(program, perspectiveMatrix, movementMatrix);
+            setMatrixUniforms(program, perspectiveMatrix, modelViewMatrix);
         };
         this.animate = function(elapsed) {
             this.rotation += (90 * elapsed) / 1000.0;
@@ -603,9 +603,9 @@ $(function() {
         this.textures  = texturesBuffer;
         this.rotation  = 0;
 
-        this.draw = function(program, perspectiveMatrix, movementMatrix) {
-            mat4.translate(movementMatrix, this.position);
-            mat4.rotate(movementMatrix, degreesToRadians(this.rotation), [1, 1, 1]);
+        this.draw = function(program, perspectiveMatrix, modelViewMatrix) {
+            mat4.translate(modelViewMatrix, this.position);
+            mat4.rotate(modelViewMatrix, degreesToRadians(this.rotation), [1, 1, 1]);
 
             gl.bindBuffer(gl.ARRAY_BUFFER, this.positions);
             gl.vertexAttribPointer(program.vertexPositionAttribute, this.positions.itemSize, gl.FLOAT, false, 0, 0);
@@ -626,7 +626,7 @@ $(function() {
 
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexes);
 
-            setMatrixUniforms(program, perspectiveMatrix, movementMatrix);
+            setMatrixUniforms(program, perspectiveMatrix, modelViewMatrix);
 
             gl.drawElements(gl.TRIANGLES, this.indexes.numItems, gl.UNSIGNED_SHORT, 0);
         };
@@ -667,15 +667,15 @@ $(function() {
         gl.uniform3fv(program.directionalColorUniform, directionalColor);
 
         mat4.perspective(viewAngle, aspectRatio, viewDistanceMin, viewDistanceMax, perspectiveMatrix);
-        mat4.identity(movementMatrix);
+        mat4.identity(modelViewMatrix);
 
-        mat4.rotate(movementMatrix, degreesToRadians(-scene.roty), [0, 1, 0]);
-        mat4.translate(movementMatrix, [-scene.x, -scene.y, -scene.z]);
+        mat4.rotate(modelViewMatrix, degreesToRadians(-scene.roty), [0, 1, 0]);
+        mat4.translate(modelViewMatrix, [-scene.x, -scene.y, -scene.z]);
 
         objects.forEach(function(object) {
-            pushMovementMatrix();
-            object.draw(program, perspectiveMatrix, movementMatrix);
-            popMovementMatrix();
+            pushModelViewMatrix();
+            object.draw(program, perspectiveMatrix, modelViewMatrix);
+            popModelViewMatrix();
         });
     };
 
@@ -688,12 +688,14 @@ $(function() {
     /**
      * Animate the scene.
      */
-    var animate = function(scene, currentKeys) {
+    var animate = function(scene, settings, currentKeys) {
         var newTime = new Date().getTime();
         var elapsed = newTime - prevTime;
 
         objects.forEach(function(object) {
-            object.animate(elapsed);
+            if (settings.animate) {
+                object.animate(elapsed);
+            }
         });
 
         framesCount++;
@@ -768,7 +770,7 @@ $(function() {
         requestAnimFrame(tick);
 
         drawScene(scene, settings);
-        animate(scene, currentKeys);
+        animate(scene, settings, currentKeys);
     };
 
     var currentKeys = {};
@@ -797,8 +799,8 @@ $(function() {
     var program = initShaders(vertexShader, fragmentShader);
 
     var perspectiveMatrix = mat4.create();
-    var movementMatrix = mat4.create();
-    var movementMatrixStack = [];
+    var modelViewMatrix = mat4.create();
+    var modelViewMatrixStack = [];
 
     var scene = {
         x:   0.0,

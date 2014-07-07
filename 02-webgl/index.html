@@ -12,7 +12,7 @@
         attribute vec4 aVertexColor;
 
         uniform mat4 uPerspectiveMatrix;
-        uniform mat4 uMovementMatrix;
+        uniform mat4 uModelViewMatrix;
         uniform mat3 uNormalMatrix;
 
         uniform vec3 uAmbientColor;
@@ -34,7 +34,7 @@
                 vLightingWeight = vec3(1.0, 1.0, 1.0);
             }
 
-            gl_Position = uPerspectiveMatrix * uMovementMatrix * vec4(aVertexPosition, 1.0);
+            gl_Position = uPerspectiveMatrix * uModelViewMatrix * vec4(aVertexPosition, 1.0);
             vTextureCoord = aTextureCoord;
             vColor = aVertexColor;
         }
@@ -113,6 +113,10 @@
         <div>
             <form>
                 <fieldset>
+                    <legend>General</legend>
+                    <label><input type="checkbox" name="animate" />Animate</label>
+                </fieldset>
+                <fieldset>
                     <legend>Lighting</legend>
                     <label><input type="checkbox" name="useDirectionalLighting" />Use Directional Lighting</label>
                     <label><input type="checkbox" name="usePointLighting" />Use Point Lighting</label>
@@ -149,6 +153,7 @@
     <div id="fps-counter"></div>
     <script>
         var settings = {
+            animate: true,
             useDirectionalLighting: true,
             usePointLighting: false,
             useSpecularLighting: false,
