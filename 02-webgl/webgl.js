@@ -84,17 +84,24 @@ $(function() {
         gl.useProgram(program);
 
         program.vertexPositionAttribute = gl.getAttribLocation(program, 'aVertexPosition');
-        program.vertexColorAttribute = gl.getAttribLocation(program, 'aVertexColor');
-        program.textureCoordAttribute = gl.getAttribLocation(program, 'aTextureCoord');
+        program.vertexNormalAttribute = gl.getAttribLocation(program, 'aVertexNormal');
+        program.vertexColorAttribute    = gl.getAttribLocation(program, 'aVertexColor');
+        program.textureCoordAttribute   = gl.getAttribLocation(program, 'aTextureCoord');
         gl.enableVertexAttribArray(program.vertexPositionAttribute);
+        gl.enableVertexAttribArray(program.vertexNormalAttribute);
         gl.enableVertexAttribArray(program.vertexColorAttribute);
         gl.enableVertexAttribArray(program.textureCoordAttribute);
 
         program.perspectiveMatrixUniform = gl.getUniformLocation(program, 'uPerspectiveMatrix');
         program.movementMatrixUniform = gl.getUniformLocation(program, 'uMovementMatrix');
+        program.normalMatrixUniform = gl.getUniformLocation(program, 'uNormalMatrix');
         program.samplerUniform = gl.getUniformLocation(program, 'uSampler');
         program.useTextureUniform = gl.getUniformLocation(program, 'uUseTexture');
-        program.useDirectionalLighting = gl.getUniformLocation(program, 'uUseDirectionalLighting');
+
+        program.useDirectionalLightingUniform = gl.getUniformLocation(program, 'uUseDirectionalLighting');
+        program.directionalLightingUniform = gl.getUniformLocation(program, 'uDirectionalLighting');
+        program.directionalColorUniform = gl.getUniformLocation(program, 'uDirectionalColor');
+        program.ambientColorUniform = gl.getUniformLocation(program, 'uAmbientColor');
 
         return program;
     }
@@ -151,6 +158,11 @@ $(function() {
     var setMatrixUniforms = function(program, perspectiveMatrix, movementMatrix) {
         gl.uniformMatrix4fv(program.perspectiveMatrixUniform, false, perspectiveMatrix);
         gl.uniformMatrix4fv(program.movementMatrixUniform, false, movementMatrix);
+
+        var normalMatrix = mat3.create();
+        mat4.toInverseMat3(movementMatrix, normalMatrix);
+        mat3.transpose(normalMatrix);
+        gl.uniformMatrix3fv(program.normalMatrixUniform, false, normalMatrix);
     };
 
     /**
@@ -169,6 +181,18 @@ $(function() {
         gl.bindBuffer(gl.ARRAY_BUFFER, positionsBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
 
+        var normals = [
+             0.0,  0.0,  1.0,
+             0.0,  0.0,  1.0,
+             0.0,  0.0,  1.0
+        ];
+        var normalsBuffer = gl.createBuffer();
+        normalsBuffer.itemSize = 3;
+        normalsBuffer.numItems = normals.length / normalsBuffer.itemSize;
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, normalsBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normals), gl.STATIC_DRAW);
+
         var colors = [
              1.0,  0.0,  0.0, 1.0,
              0.0,  1.0,  0.0, 1.0,
@@ -183,6 +207,7 @@ $(function() {
 
         this.position  = position;
         this.positions = positionsBuffer;
+        this.normals   = normalsBuffer;
         this.colors    = colorsBuffer;
         this.rotation  = 0;
 
@@ -192,6 +217,9 @@ $(function() {
 
             gl.bindBuffer(gl.ARRAY_BUFFER, this.positions);
             gl.vertexAttribPointer(program.vertexPositionAttribute, this.positions.itemSize, gl.FLOAT, false, 0, 0);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.normals);
+            gl.vertexAttribPointer(program.vertexNormalAttribute, this.normals.itemSize, gl.FLOAT, false, 0, 0);
 
             gl.bindBuffer(gl.ARRAY_BUFFER, this.colors);
             gl.vertexAttribPointer(program.vertexColorAttribute, this.colors.itemSize, gl.FLOAT, false, 0, 0);
@@ -224,6 +252,19 @@ $(function() {
         gl.bindBuffer(gl.ARRAY_BUFFER, positionsBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
 
+        var normals = [
+             0.0,  0.0,  1.0,
+             0.0,  0.0,  1.0,
+             0.0,  0.0,  1.0,
+             0.0,  0.0,  1.0
+        ];
+        var normalsBuffer = gl.createBuffer();
+        normalsBuffer.itemSize = 3;
+        normalsBuffer.numItems = normals.length / normalsBuffer.itemSize;
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, normalsBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normals), gl.STATIC_DRAW);
+
         var colors = [
              0.5,  0.5,  1.0, 1.0,
              0.5,  0.5,  1.0, 1.0,
@@ -239,6 +280,7 @@ $(function() {
 
         this.position  = position;
         this.positions = positionsBuffer;
+        this.normals   = normalsBuffer;
         this.colors    = colorsBuffer;
         this.rotation  = 0;
 
@@ -248,6 +290,9 @@ $(function() {
 
             gl.bindBuffer(gl.ARRAY_BUFFER, this.positions);
             gl.vertexAttribPointer(program.vertexPositionAttribute, this.positions.itemSize, gl.FLOAT, false, 0, 0);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.normals);
+            gl.vertexAttribPointer(program.vertexNormalAttribute, this.normals.itemSize, gl.FLOAT, false, 0, 0);
 
             gl.bindBuffer(gl.ARRAY_BUFFER, this.colors);
             gl.vertexAttribPointer(program.vertexColorAttribute, this.colors.itemSize, gl.FLOAT, false, 0, 0);
@@ -291,6 +336,31 @@ $(function() {
         gl.bindBuffer(gl.ARRAY_BUFFER, positionsBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
 
+        var normals = [
+            // Front face
+             0.0,    0.707,  0.707,
+             0.0,    0.707,  0.707,
+             0.0,    0.707,  0.707,
+            // Right face
+             0.707,  0.707,  0.0,
+             0.707,  0.707,  0.0,
+             0.707,  0.707,  0.0,
+            // Back face
+             0.0,    0.707, -0.707,
+             0.0,    0.707, -0.707,
+             0.0,    0.707, -0.707,
+            // Left face
+            -0.707,  0.707,  0.0,
+            -0.707,  0.707,  0.0,
+            -0.707,  0.070,  0.0
+        ];
+        var normalsBuffer = gl.createBuffer();
+        normalsBuffer.itemSize = 3;
+        normalsBuffer.numItems = normals.length / normalsBuffer.itemSize;
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, normalsBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normals), gl.STATIC_DRAW);
+
         var colors = [
             // Front face
             1.0, 0.0, 0.0, 1.0,
@@ -318,6 +388,7 @@ $(function() {
 
         this.position  = position;
         this.positions = positionsBuffer;
+        this.normals   = normalsBuffer;
         this.colors    = colorsBuffer;
         this.rotation  = 0;
 
@@ -327,6 +398,9 @@ $(function() {
 
             gl.bindBuffer(gl.ARRAY_BUFFER, this.positions);
             gl.vertexAttribPointer(program.vertexPositionAttribute, this.positions.itemSize, gl.FLOAT, false, 0, 0);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.normals);
+            gl.vertexAttribPointer(program.vertexNormalAttribute, this.normals.itemSize, gl.FLOAT, false, 0, 0);
 
             gl.bindBuffer(gl.ARRAY_BUFFER, this.colors);
             gl.vertexAttribPointer(program.vertexColorAttribute, this.colors.itemSize, gl.FLOAT, false, 0, 0);
@@ -390,6 +464,50 @@ $(function() {
 
         gl.bindBuffer(gl.ARRAY_BUFFER, positionsBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+
+        var normals = [
+            // Front face
+             0.0,  0.0,  1.0,
+             0.0,  0.0,  1.0,
+             0.0,  0.0,  1.0,
+             0.0,  0.0,  1.0,
+
+            // Back face
+             0.0,  0.0, -1.0,
+             0.0,  0.0, -1.0,
+             0.0,  0.0, -1.0,
+             0.0,  0.0, -1.0,
+
+            // Top face
+             0.0,  1.0,  0.0,
+             0.0,  1.0,  0.0,
+             0.0,  1.0,  0.0,
+             0.0,  1.0,  0.0,
+
+            // Bottom face
+             0.0, -1.0,  0.0,
+             0.0, -1.0,  0.0,
+             0.0, -1.0,  0.0,
+             0.0, -1.0,  0.0,
+
+            // Right face
+             1.0,  0.0,  0.0,
+             1.0,  0.0,  0.0,
+             1.0,  0.0,  0.0,
+             1.0,  0.0,  0.0,
+
+            // Left face
+            -1.0,  0.0,  0.0,
+            -1.0,  0.0,  0.0,
+            -1.0,  0.0,  0.0,
+            -1.0,  0.0,  0.0,
+        ];
+        var normalsBuffer = gl.createBuffer();
+        normalsBuffer.itemSize = 3;
+        normalsBuffer.numItems = normals.length / normalsBuffer.itemSize;
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, normalsBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normals), gl.STATIC_DRAW);
 
         var packedColors = [
             [1.0, 0.0, 0.0, 1.0], // Front face
@@ -480,6 +598,7 @@ $(function() {
         this.texture   = 0;
         this.indexes   = indexesBuffer;
         this.positions = positionsBuffer;
+        this.normals   = normalsBuffer;
         this.colors    = colorsBuffer;
         this.textures  = texturesBuffer;
         this.rotation  = 0;
@@ -490,6 +609,9 @@ $(function() {
 
             gl.bindBuffer(gl.ARRAY_BUFFER, this.positions);
             gl.vertexAttribPointer(program.vertexPositionAttribute, this.positions.itemSize, gl.FLOAT, false, 0, 0);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.normals);
+            gl.vertexAttribPointer(program.vertexNormalAttribute, this.normals.itemSize, gl.FLOAT, false, 0, 0);
 
             gl.bindBuffer(gl.ARRAY_BUFFER, this.colors);
             gl.vertexAttribPointer(program.vertexColorAttribute, this.colors.itemSize, gl.FLOAT, false, 0, 0);
@@ -530,7 +652,19 @@ $(function() {
         var viewDistanceMin = 0.1;
         var viewDistanceMax = 100.0;
 
-        gl.uniform1i(program.useDirectionalLighting, settings.useDirectionalLighting);
+        gl.uniform1i(program.useDirectionalLightingUniform, settings.useDirectionalLighting);
+
+        var ambientColor = vec3.create([settings.ambientR, settings.ambientG, settings.ambientB]);
+        gl.uniform3fv(program.ambientColorUniform, ambientColor);
+
+        var directionalLighting = vec3.create();
+        vec3.normalize([settings.directionalX, settings.directionalY, settings.directionalZ], directionalLighting);
+        vec3.scale(directionalLighting, -1); // normal calculation is with the inverted value of the light's direction
+        gl.uniform3fv(program.directionalLightingUniform, directionalLighting);
+
+        var directionalColor = vec3.create();
+        vec3.normalize([settings.directionalR, settings.directionalG, settings.directionalB], directionalColor);
+        gl.uniform3fv(program.directionalColorUniform, directionalColor);
 
         mat4.perspective(viewAngle, aspectRatio, viewDistanceMin, viewDistanceMax, perspectiveMatrix);
         mat4.identity(movementMatrix);

@@ -6,17 +6,34 @@
     <script src="glMatrix-0.9.5.min.js" type="text/javascript"></script>
 
     <script type="x-shader/x-vertex" id="2d-shader-vertex">
+        attribute vec3 aVertexNormal;
         attribute vec3 aVertexPosition;
         attribute vec2 aTextureCoord;
         attribute vec4 aVertexColor;
 
         uniform mat4 uPerspectiveMatrix;
         uniform mat4 uMovementMatrix;
+        uniform mat3 uNormalMatrix;
+
+        uniform vec3 uAmbientColor;
+
+        uniform bool uUseDirectionalLighting;
+        uniform vec3 uDirectionalLighting;
+        uniform vec3 uDirectionalColor;
 
         varying vec2 vTextureCoord;
         varying vec4 vColor;
+        varying vec3 vLightingWeight;
 
         void main(void) {
+            if (uUseDirectionalLighting) {
+                vec3 transformedNormal = uNormalMatrix * aVertexNormal;
+                float directionalLightingWeight = max(dot(transformedNormal, uDirectionalLighting), 0.0);
+                vLightingWeight = uDirectionalColor * directionalLightingWeight + uAmbientColor;
+            } else {
+                vLightingWeight = vec3(1.0, 1.0, 1.0);
+            }
+
             gl_Position = uPerspectiveMatrix * uMovementMatrix * vec4(aVertexPosition, 1.0);
             vTextureCoord = aTextureCoord;
             vColor = aVertexColor;
@@ -27,18 +44,20 @@
         precision mediump float;
 
         uniform bool uUseTexture;
-        uniform bool uUseDirectionalLighting;
         uniform sampler2D uSampler;
 
         varying vec2 vTextureCoord;
         varying vec4 vColor;
+        varying vec3 vLightingWeight;
 
         void main(void) {
-            if (uUseTexture && uUseDirectionalLighting) {
-                gl_FragColor = texture2D(uSampler, vTextureCoord.st);
+            vec4 baseColor;
+            if (uUseTexture) {
+                baseColor = texture2D(uSampler, vTextureCoord.st);
             } else {
-                gl_FragColor = vColor;
+                baseColor = vColor;
             }
+            gl_FragColor = vec4(baseColor.rgb * vLightingWeight, baseColor.a);
         }
     </script>
 
@@ -172,9 +191,9 @@
             if (name.indexOf('RGB', name.length - 'RGB'.length) !== -1) {
                 var prefix = name.substring(0, name.length - 'RGB'.length);
                 var rgb = htmlToRgb(value);
-                settings[prefix + 'R'] = rgb.r;
-                settings[prefix + 'G'] = rgb.g;
-                settings[prefix + 'B'] = rgb.b;
+                settings[prefix + 'R'] = rgb.r / 256;
+                settings[prefix + 'G'] = rgb.g / 256;
+                settings[prefix + 'B'] = rgb.b / 256;
             }
         };
 
