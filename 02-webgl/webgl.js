@@ -751,8 +751,6 @@ $(function() {
         this.rotation  = 0;
 
         this.draw = function(program, perspectiveMatrix, modelViewMatrix) {
-            gl.uniform1i(program.useDirectionalLightingUniform, false);
-
             var rotationOnly = mat4.create();
             mat4.identity(rotationOnly);
             mat4.rotate(rotationOnly, degreesToRadians(this.rotation), [0, 0, 1]);
@@ -786,11 +784,7 @@ $(function() {
         };
         this.animate = function(elapsed) {
             this.rotation += (90 * elapsed) / 1000.0;
-        };
-        this.keypress = function(type, input) {
-            if (input === 'U') {
-                this.texture = (this.texture + 1) % 3;
-            }
+            this.position = [ Math.sin(this.rotation / 100.0), Math.cos(this.rotation / 100.0), this.position[2] ];
         };
     };
 
@@ -834,6 +828,8 @@ $(function() {
         mat4.perspective(viewAngle, aspectRatio, viewDistanceMin, viewDistanceMax, perspectiveMatrix);
         mat4.identity(modelViewMatrix);
 
+        pushModelViewMatrix();
+
         mat4.rotate(modelViewMatrix, degreesToRadians(-scene.roty), [0, 1, 0]);
         mat4.translate(modelViewMatrix, [-scene.x, -scene.y, -scene.z]);
 
@@ -842,6 +838,22 @@ $(function() {
             object.draw(program, perspectiveMatrix, modelViewMatrix);
             popModelViewMatrix();
         });
+
+        popModelViewMatrix();
+
+        gl.uniform1i(program.useDirectionalLightingUniform, false);
+        gl.uniform1i(program.useBlendingUniform, true);
+        gl.uniform1f(program.alphaUniform, 1.0);
+
+        gl.enable(gl.BLEND);
+        gl.disable(gl.DEPTH_TEST);
+
+        alphaObjects.forEach(function(object) {
+            pushModelViewMatrix();
+            object.draw(program, perspectiveMatrix, modelViewMatrix);
+            popModelViewMatrix();
+        });
+
     };
 
     var prevTime = new Date().getTime();
@@ -858,6 +870,12 @@ $(function() {
         var elapsed = newTime - prevTime;
 
         objects.forEach(function(object) {
+            if (settings.animate) {
+                object.animate(elapsed);
+            }
+        });
+
+        alphaObjects.forEach(function(object) {
             if (settings.animate) {
                 object.animate(elapsed);
             }
@@ -977,20 +995,23 @@ $(function() {
         rotz: 0.0,
     };
 
-    var crates = [
+    var crateTextures = [
         getTexture('crate.gif', gl.LINEAR,  gl.LINEAR_MIPMAP_NEAREST),
         getTexture('crate.gif', gl.NEAREST, gl.NEAREST),
         getTexture('crate.gif', gl.LINEAR,  gl.LINEAR)
     ];
-    var star = getTexture('star.gif', gl.LINEAR,  gl.LINEAR_MIPMAP_NEAREST);
+    var starTexture = getTexture('star.gif', gl.LINEAR,  gl.LINEAR_MIPMAP_NEAREST);
 
     var objects = [
-        new Cube(    [-4.5, -1.5, 0.0], crates),
+        new Cube(    [-4.5, -1.5, 0.0], crateTextures),
         new Triangle([-1.5,  1.5, 0.0]),
         new Square(  [ 1.5,  1.5, 0.0]),
         new Pyramid( [-1.5, -1.5, 0.0]),
-        new Cube(    [ 1.5, -1.5, 0.0]),
-        new Star(    [4.5, -1.5, 0.0], star),
+        new Cube(    [ 1.5, -1.5, 0.0])
+    ];
+
+    var alphaObjects = [
+        new Star([0.0, 0.0, -25.0], starTexture)
     ];
 
     $(document).keydown(function(e) { handleInput('down', e); });
