@@ -831,6 +831,7 @@ $(function() {
         pushModelViewMatrix();
 
         mat4.rotate(modelViewMatrix, degreesToRadians(-scene.roty), [0, 1, 0]);
+        mat4.rotate(modelViewMatrix, degreesToRadians(-scene.rotx), [1, 0, 0]);
         mat4.translate(modelViewMatrix, [-scene.x, -scene.y, -scene.z]);
 
         objects.forEach(function(object) {
@@ -899,6 +900,12 @@ $(function() {
             scene.y += 0.01 * elapsed;
         } else if (currentKeys[16]) { // down
             scene.y -= 0.01 * elapsed;
+        }
+
+        if (currentKeys[33]) { // lookup
+            scene.rotx += 0.1 * elapsed;
+        } else if (currentKeys[34]) { // lookdown
+            scene.rotx -= 0.1 * elapsed;
         }
 
         if (currentKeys[222]) { // turn left
