@@ -674,6 +674,127 @@ $(function() {
     };
 
     /**
+     * Create a star.
+     */
+    var Star = function(position, texture) {
+        var positions = [
+            -1.0,  1.0,  0.0,
+             1.0,  1.0,  0.0,
+             1.0, -1.0,  0.0,
+            -1.0, -1.0,  0.0
+        ];
+        var positionsBuffer = gl.createBuffer();
+        positionsBuffer.itemSize = 3;
+        positionsBuffer.numItems = positions.length / positionsBuffer.itemSize;
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionsBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+
+        var normals = [
+             0.0,  0.0,  1.0,
+             0.0,  0.0,  1.0,
+             0.0,  0.0,  1.0,
+             0.0,  0.0,  1.0
+        ];
+        var normalsBuffer = gl.createBuffer();
+        normalsBuffer.itemSize = 3;
+        normalsBuffer.numItems = normals.length / normalsBuffer.itemSize;
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, normalsBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normals), gl.STATIC_DRAW);
+
+        var colors = [
+            1.0, 1.0, 1.0, 1.0,
+            1.0, 1.0, 1.0, 1.0,
+            1.0, 1.0, 1.0, 1.0,
+            1.0, 1.0, 1.0, 1.0
+        ];
+
+        var colorsBuffer = gl.createBuffer();
+        colorsBuffer.itemSize = 4;
+        colorsBuffer.numItems = colors.length / colorsBuffer.itemSize;
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, colorsBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
+
+        var textures = [
+            0.0, 0.0,
+            1.0, 0.0,
+            1.0, 1.0,
+            0.0, 1.0
+        ];
+
+        var texturesBuffer = gl.createBuffer();
+        texturesBuffer.itemSize = 2;
+        texturesBuffer.numItems = textures.length / texturesBuffer.itemSize;
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, texturesBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textures), gl.STATIC_DRAW);
+
+        var indexes = [
+            0, 1, 2,      0, 2, 3,
+        ];
+        var indexesBuffer = gl.createBuffer();
+        indexesBuffer.itemSize = 1;
+        indexesBuffer.numItems = indexes.length / indexesBuffer.itemSize;
+
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexesBuffer);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indexes), gl.STATIC_DRAW);
+
+        this.position  = position;
+        this.texture   = 0;
+        this.indexes   = indexesBuffer;
+        this.positions = positionsBuffer;
+        this.normals   = normalsBuffer;
+        this.colors    = colorsBuffer;
+        this.textures  = texturesBuffer;
+        this.rotation  = 0;
+
+        this.draw = function(program, perspectiveMatrix, modelViewMatrix) {
+            gl.uniform1i(program.useDirectionalLightingUniform, false);
+
+            var rotationOnly = mat4.create();
+            mat4.identity(rotationOnly);
+            mat4.rotate(rotationOnly, degreesToRadians(this.rotation), [0, 0, 1]);
+            setNormalUniform(program, rotationOnly);
+
+            mat4.translate(modelViewMatrix, this.position);
+            mat4.rotate(modelViewMatrix, degreesToRadians(this.rotation), [0, 0, 1]);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.positions);
+            gl.vertexAttribPointer(program.vertexPositionAttribute, this.positions.itemSize, gl.FLOAT, false, 0, 0);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.normals);
+            gl.vertexAttribPointer(program.vertexNormalAttribute, this.normals.itemSize, gl.FLOAT, false, 0, 0);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.colors);
+            gl.vertexAttribPointer(program.vertexColorAttribute, this.colors.itemSize, gl.FLOAT, false, 0, 0);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.textures);
+            gl.vertexAttribPointer(program.textureCoordAttribute, this.textures.itemSize, gl.FLOAT, false, 0, 0);
+
+            gl.activeTexture(gl.TEXTURE0);
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+            gl.uniform1i(program.samplerUniform, 0);
+            gl.uniform1i(program.useTextureUniform, texture !== undefined);
+
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexes);
+
+            setMatrixUniforms(program, perspectiveMatrix, modelViewMatrix);
+
+            gl.drawElements(gl.TRIANGLES, this.indexes.numItems, gl.UNSIGNED_SHORT, 0);
+        };
+        this.animate = function(elapsed) {
+            this.rotation += (90 * elapsed) / 1000.0;
+        };
+        this.keypress = function(type, input) {
+            if (input === 'U') {
+                this.texture = (this.texture + 1) % 3;
+            }
+        };
+    };
+
+    /**
      * Draw the scene.
      */
     var drawScene = function(scene, settings) {
@@ -861,13 +982,15 @@ $(function() {
         getTexture('crate.gif', gl.NEAREST, gl.NEAREST),
         getTexture('crate.gif', gl.LINEAR,  gl.LINEAR)
     ];
+    var star = getTexture('star.gif', gl.LINEAR,  gl.LINEAR_MIPMAP_NEAREST);
 
     var objects = [
         new Cube(    [-4.5, -1.5, 0.0], crates),
         new Triangle([-1.5,  1.5, 0.0]),
         new Square(  [ 1.5,  1.5, 0.0]),
         new Pyramid( [-1.5, -1.5, 0.0]),
-        new Cube(    [ 1.5, -1.5, 0.0])
+        new Cube(    [ 1.5, -1.5, 0.0]),
+        new Star(    [4.5, -1.5, 0.0], star),
     ];
 
     $(document).keydown(function(e) { handleInput('down', e); });
