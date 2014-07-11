@@ -25,7 +25,10 @@ $(function() {
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
         gl.enable(gl.DEPTH_TEST);
 
-        console.log('Antialiasing:', gl.getParameter(gl.SAMPLES));
+        gl.depthFunc(gl.LESS);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+
+        //console.log('Antialiasing:', gl.getParameter(gl.SAMPLES));
 
         return gl;
     }
@@ -102,6 +105,9 @@ $(function() {
         program.directionalLightingUniform = gl.getUniformLocation(program, 'uDirectionalLighting');
         program.directionalColorUniform = gl.getUniformLocation(program, 'uDirectionalColor');
         program.ambientColorUniform = gl.getUniformLocation(program, 'uAmbientColor');
+
+        program.useBlendingUniform = gl.getUniformLocation(program, 'uUseBlending');
+        program.alphaUniform = gl.getUniformLocation(program, 'uAlpha');
 
         return program;
     }
@@ -692,6 +698,17 @@ $(function() {
         var directionalColor = vec3.create();
         vec3.normalize([settings.directionalR, settings.directionalG, settings.directionalB], directionalColor);
         gl.uniform3fv(program.directionalColorUniform, directionalColor);
+
+        gl.uniform1i(program.useBlendingUniform, settings.useBlending);
+        gl.uniform1f(program.alphaUniform, settings.alpha);
+
+        if (settings.useBlending) {
+            gl.enable(gl.BLEND);
+            gl.disable(gl.DEPTH_TEST);
+        } else {
+            gl.disable(gl.BLEND);
+            gl.enable(gl.DEPTH_TEST);
+        }
 
         mat4.perspective(viewAngle, aspectRatio, viewDistanceMin, viewDistanceMax, perspectiveMatrix);
         mat4.identity(modelViewMatrix);

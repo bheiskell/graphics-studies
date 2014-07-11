@@ -46,18 +46,28 @@
         uniform bool uUseTexture;
         uniform sampler2D uSampler;
 
+        uniform bool uUseBlending;
+        uniform float uAlpha;
+
         varying vec2 vTextureCoord;
         varying vec4 vColor;
         varying vec3 vLightingWeight;
 
         void main(void) {
+            float alphaMultiplier;
+            if (uUseBlending) {
+                alphaMultiplier = uAlpha;
+            } else {
+                alphaMultiplier = 1.0;
+            }
+
             vec4 baseColor;
             if (uUseTexture) {
                 baseColor = texture2D(uSampler, vTextureCoord.st);
             } else {
                 baseColor = vColor;
             }
-            gl_FragColor = vec4(baseColor.rgb * vLightingWeight, baseColor.a);
+            gl_FragColor = vec4(baseColor.rgb * vLightingWeight, baseColor.a * alphaMultiplier);
         }
     </script>
 
