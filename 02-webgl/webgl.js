@@ -966,8 +966,9 @@ $(function() {
 
         pushModelViewMatrix();
 
-        mat4.rotate(modelViewMatrix, degreesToRadians(-scene.roty), [0, 1, 0]);
         mat4.rotate(modelViewMatrix, degreesToRadians(-scene.rotx), [1, 0, 0]);
+        mat4.rotate(modelViewMatrix, degreesToRadians(-scene.roty), [0, 1, 0]);
+
         mat4.translate(modelViewMatrix, [-scene.x, -scene.y, -scene.z]);
 
         objects.forEach(function(object) {
@@ -1026,7 +1027,9 @@ $(function() {
                 round2(scene.x) + ', ' +
                 round2(scene.y) + ', ' +
                 round2(scene.z) + ') (' +
-                round2(scene.roty) + ') ' +
+                round2(scene.rotx) + ', ' +
+                round2(scene.roty) + ', ' +
+                round2(scene.rotz) + ') ' +
                 '');
             framesCount = 0;
             framesTime = 0;
