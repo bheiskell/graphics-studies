@@ -26,7 +26,6 @@ $(function() {
         gl.enable(gl.DEPTH_TEST);
 
         gl.depthFunc(gl.LESS);
-        gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
 
         //console.log('Antialiasing:', gl.getParameter(gl.SAMPLES));
 
@@ -949,31 +948,44 @@ $(function() {
         gl.uniform1i(program.useBlendingUniform, settings.useBlending);
         gl.uniform1f(program.alphaUniform, settings.alpha);
 
-        if (settings.useBlending) {
-            gl.enable(gl.BLEND);
-            gl.disable(gl.DEPTH_TEST);
-        } else {
-            gl.disable(gl.BLEND);
-            gl.enable(gl.DEPTH_TEST);
-        }
+        lights.forEach(function(light, index) {
+            if (settings.useBlending) {
+                gl.enable(gl.BLEND);
+                gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+                gl.disable(gl.DEPTH_TEST);
+            } else {
+                if (index == 0) {
+                    gl.disable(gl.BLEND);
+                    gl.depthFunc(gl.LESS);
+                    // we don't need to turn off depth because we later use EQUAL - leaving as a reminder
+                    //gl.depthMask(true);
+                } else {
+                    gl.enable(gl.BLEND);
+                    gl.depthFunc(gl.EQUAL);
+                    //gl.depthMask(false);
+                }
+                gl.blendFunc(gl.ONE, gl.ONE);
+                gl.enable(gl.DEPTH_TEST);
+            }
 
-        mat4.perspective(viewAngle, aspectRatio, viewDistanceMin, viewDistanceMax, perspectiveMatrix);
-        mat4.identity(modelViewMatrix);
+            mat4.perspective(viewAngle, aspectRatio, viewDistanceMin, viewDistanceMax, perspectiveMatrix);
+            mat4.identity(modelViewMatrix);
 
-        pushModelViewMatrix();
-
-        mat4.rotate(modelViewMatrix, degreesToRadians(-scene.pitch), [1, 0, 0]);
-        mat4.rotate(modelViewMatrix, degreesToRadians(-scene.yaw), [0, 1, 0]);
-
-        mat4.translate(modelViewMatrix, [-scene.x, -scene.y, -scene.z]);
-
-        objects.forEach(function(object) {
             pushModelViewMatrix();
-            object.draw(program, perspectiveMatrix, modelViewMatrix);
+
+            mat4.rotate(modelViewMatrix, degreesToRadians(-scene.pitch), [1, 0, 0]);
+            mat4.rotate(modelViewMatrix, degreesToRadians(-scene.yaw), [0, 1, 0]);
+
+            mat4.translate(modelViewMatrix, [-scene.x, -scene.y, -scene.z]);
+
+            objects.forEach(function(object) {
+                pushModelViewMatrix();
+                object.draw(program, perspectiveMatrix, modelViewMatrix);
+                popModelViewMatrix();
+            });
+
             popModelViewMatrix();
         });
-
-        popModelViewMatrix();
 
         gl.uniform1i(program.useDirectionalLightingUniform, false);
         gl.uniform1i(program.useBlendingUniform, true);
@@ -1198,6 +1210,10 @@ $(function() {
         new Pyramid( [-1.5, -1.5, 0.0]),
         new Cube(    [ 4.5, -1.5, 0.0]),
         new Sphere(  [ 1.5, -1.5, 0.0], moonTexture)
+    ];
+
+    var lights = [
+        {}
     ];
 
     var alphaObjects = [
