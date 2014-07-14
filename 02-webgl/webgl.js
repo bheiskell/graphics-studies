@@ -789,6 +789,143 @@ $(function() {
     };
 
     /**
+     * Create a sphere.
+     */
+    var Sphere = function(position, texture) {
+        var positions = [
+        ];
+        var normals = [
+        ];
+        var colors = [
+        ];
+        var textures = [
+        ];
+        var indexes = [
+        ];
+
+        var latitudes = 30;  // north / south
+        var longitudes = 30; // east / west
+
+        var i = 0;
+        for (var longitude = -longitudes / 2; longitude < longitudes / 2; longitude++) {
+            for (var latitude = -latitudes / 2; latitude < latitudes / 2; latitude++) {
+                var longDegree = longitude * 360 / longitudes;
+                var latDegree = (latitude) * 180 / (latitudes);
+                var vector = [
+                    Math.cos(degreesToRadians(latDegree)) * Math.cos(degreesToRadians(longDegree)),
+                    Math.sin(degreesToRadians(latDegree)),
+                    Math.cos(degreesToRadians(latDegree)) * Math.sin(degreesToRadians(longDegree)),
+                ];
+                positions.push.apply(positions, vector);
+                normals.push.apply(normals, vector);
+                colors.push.apply(colors, [longitude/longitudes + 0.5, latitude/latitudes + 0.5, 1.0, 1.0]);
+                if (longitude >= 14) {
+                console.log('mark');
+                textures.push.apply(textures, [
+                    1.0, latitude / latitudes + 0.5
+                ]);
+                } else {
+                textures.push.apply(textures, [
+                    longitude / longitudes + 0.5, latitude / latitudes + 0.5
+                ]);
+                }
+            }
+        }
+        for (var longitude = 0; longitude < longitudes; longitude++) {
+            for (var latitude = 0; latitude < latitudes - 1; latitude++) {
+                var thisLong = latitude + (longitude * latitudes);
+                var nextLong = (thisLong + latitudes) % (longitudes * latitudes);
+                indexes.push.apply(indexes, [thisLong, thisLong + 1, nextLong]);
+                indexes.push.apply(indexes, [thisLong + 1, nextLong, nextLong + 1]);
+
+            }
+        }
+
+        console.log(indexes);
+        console.log(textures);
+        console.log(positions.length / 3, normals.length / 3, colors.length / 4, indexes.length / 3);
+
+        var positionsBuffer = gl.createBuffer();
+        positionsBuffer.itemSize = 3;
+        positionsBuffer.numItems = positions.length / positionsBuffer.itemSize;
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionsBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+
+        var normalsBuffer = gl.createBuffer();
+        normalsBuffer.itemSize = 3;
+        normalsBuffer.numItems = normals.length / normalsBuffer.itemSize;
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, normalsBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normals), gl.STATIC_DRAW);
+
+        var colorsBuffer = gl.createBuffer();
+        colorsBuffer.itemSize = 4;
+        colorsBuffer.numItems = colors.length / colorsBuffer.itemSize;
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, colorsBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
+
+        var texturesBuffer = gl.createBuffer();
+        texturesBuffer.itemSize = 2;
+        texturesBuffer.numItems = textures.length / texturesBuffer.itemSize;
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, texturesBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textures), gl.STATIC_DRAW);
+
+        var indexesBuffer = gl.createBuffer();
+        indexesBuffer.itemSize = 1;
+        indexesBuffer.numItems = indexes.length / indexesBuffer.itemSize;
+
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexesBuffer);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indexes), gl.STATIC_DRAW);
+
+        this.position  = position;
+        this.indexes   = indexesBuffer;
+        this.positions = positionsBuffer;
+        this.normals   = normalsBuffer;
+        this.colors    = colorsBuffer;
+        this.textures  = texturesBuffer;
+        this.rotation  = 0;
+
+        this.draw = function(program, perspectiveMatrix, modelViewMatrix) {
+            var rotationOnly = mat4.create();
+            mat4.identity(rotationOnly);
+            mat4.rotate(rotationOnly, degreesToRadians(this.rotation), [0, 1, 0]);
+            setNormalUniform(program, rotationOnly);
+
+            mat4.translate(modelViewMatrix, this.position);
+            mat4.rotate(modelViewMatrix, degreesToRadians(this.rotation), [0, 1, 0]);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.positions);
+            gl.vertexAttribPointer(program.vertexPositionAttribute, this.positions.itemSize, gl.FLOAT, false, 0, 0);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.normals);
+            gl.vertexAttribPointer(program.vertexNormalAttribute, this.normals.itemSize, gl.FLOAT, false, 0, 0);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.colors);
+            gl.vertexAttribPointer(program.vertexColorAttribute, this.colors.itemSize, gl.FLOAT, false, 0, 0);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.textures);
+            gl.vertexAttribPointer(program.textureCoordAttribute, this.textures.itemSize, gl.FLOAT, false, 0, 0);
+
+            gl.activeTexture(gl.TEXTURE0);
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+            gl.uniform1i(program.samplerUniform, 0);
+            gl.uniform1i(program.useTextureUniform, texture !== undefined);
+
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexes);
+
+            setMatrixUniforms(program, perspectiveMatrix, modelViewMatrix);
+
+            gl.drawElements(gl.TRIANGLES, this.indexes.numItems, gl.UNSIGNED_SHORT, 0);
+        };
+        this.animate = function(elapsed) {
+            this.rotation += (90 * elapsed) / 1000.0;
+        };
+    };
+
+    /**
      * Draw the scene.
      */
     var drawScene = function(scene, settings) {
@@ -1008,13 +1145,15 @@ $(function() {
         getTexture('crate.gif', gl.LINEAR,  gl.LINEAR)
     ];
     var starTexture = getTexture('star.gif', gl.LINEAR,  gl.LINEAR_MIPMAP_NEAREST);
+    var moonTexture = getTexture('moon.gif', gl.LINEAR,  gl.LINEAR_MIPMAP_NEAREST);
 
     var objects = [
         new Cube(    [-4.5, -1.5, 0.0], crateTextures),
         new Triangle([-1.5,  1.5, 0.0]),
         new Square(  [ 1.5,  1.5, 0.0]),
         new Pyramid( [-1.5, -1.5, 0.0]),
-        new Cube(    [ 1.5, -1.5, 0.0])
+        new Cube(    [ 4.5, -1.5, 0.0]),
+        new Sphere(  [ 1.5, -1.5, 0.0], moonTexture)
     ];
 
     var alphaObjects = [
