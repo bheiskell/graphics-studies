@@ -935,22 +935,22 @@ $(function() {
         gl.uniform1i(program.useLightingUniform, settings.useLighting);
         gl.uniform1i(program.useDirectionalLightingUniform, settings.useDirectionalLighting);
 
-        var ambientColor = vec3.create([settings.ambientR, settings.ambientG, settings.ambientB]);
-        gl.uniform3fv(program.ambientColorUniform, ambientColor);
+        //var ambientColor = vec3.create([settings.ambientR, settings.ambientG, settings.ambientB]);
+        //gl.uniform3fv(program.ambientColorUniform, ambientColor);
 
         var directionalLighting = vec3.create();
         vec3.normalize([settings.directionalX, settings.directionalY, settings.directionalZ], directionalLighting);
         vec3.scale(directionalLighting, -1); // normal calculation is with the inverted value of the light's direction
         gl.uniform3fv(program.directionalLightingUniform, directionalLighting);
 
-        var directionalColor = vec3.create();
-        vec3.normalize([settings.directionalR, settings.directionalG, settings.directionalB], directionalColor);
-        gl.uniform3fv(program.directionalColorUniform, directionalColor);
-
         gl.uniform1i(program.useBlendingUniform, settings.useBlending);
         gl.uniform1f(program.alphaUniform, settings.alpha);
 
         lights.forEach(function(light, index) {
+            var lightColor = vec3.create();
+            vec3.set([settings[light.color + 'R'], settings[light.color + 'G'], settings[light.color + 'B']], lightColor);
+            gl.uniform3fv(program[light.uniform], lightColor);
+
             if (settings.useBlending) {
                 gl.enable(gl.BLEND);
                 gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
@@ -962,6 +962,10 @@ $(function() {
                     // we don't need to turn off depth because we later use EQUAL - leaving as a reminder
                     //gl.depthMask(true);
                 } else {
+                    if (!settings.useLighting) {
+                        // so hack. if we're on the second loop and we're not using lighting, skip
+                        return;
+                    }
                     gl.enable(gl.BLEND);
                     gl.depthFunc(gl.EQUAL);
                     //gl.depthMask(false);
@@ -987,6 +991,9 @@ $(function() {
             });
 
             popModelViewMatrix();
+
+            vec3.normalize([0.0, 0.0, 0.0, 0.0], lightColor);
+            gl.uniform3fv(program[light.uniform], lightColor);
         });
 
         gl.uniform1i(program.useLightingUniform, false);
@@ -1214,7 +1221,14 @@ $(function() {
     ];
 
     var lights = [
-        {}
+        {
+            uniform: 'directionalColorUniform',
+            color: 'directional',
+        },
+        {
+            uniform: 'ambientColorUniform',
+            color: 'ambient',
+        },
     ];
 
     var alphaObjects = [
