@@ -1038,8 +1038,7 @@ $(function() {
                 round2(scene.y) + ', ' +
                 round2(scene.z) + ') (' +
                 round2(scene.pitch) + ', ' +
-                round2(scene.yaw) + ', ' +
-                round2(scene.rotz) + ') ' +
+                round2(scene.yaw) + ')' +
                 '');
             framesCount = 0;
             framesTime = 0;
