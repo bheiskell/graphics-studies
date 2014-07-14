@@ -100,6 +100,7 @@ $(function() {
         program.samplerUniform = gl.getUniformLocation(program, 'uSampler');
         program.useTextureUniform = gl.getUniformLocation(program, 'uUseTexture');
 
+        program.useLightingUniform = gl.getUniformLocation(program, 'uUseLighting');
         program.useDirectionalLightingUniform = gl.getUniformLocation(program, 'uUseDirectionalLighting');
         program.directionalLightingUniform = gl.getUniformLocation(program, 'uDirectionalLighting');
         program.directionalColorUniform = gl.getUniformLocation(program, 'uDirectionalColor');
@@ -931,6 +932,7 @@ $(function() {
         var viewDistanceMin = 0.1;
         var viewDistanceMax = 100.0;
 
+        gl.uniform1i(program.useLightingUniform, settings.useLighting);
         gl.uniform1i(program.useDirectionalLightingUniform, settings.useDirectionalLighting);
 
         var ambientColor = vec3.create([settings.ambientR, settings.ambientG, settings.ambientB]);
@@ -987,7 +989,7 @@ $(function() {
             popModelViewMatrix();
         });
 
-        gl.uniform1i(program.useDirectionalLightingUniform, false);
+        gl.uniform1i(program.useLightingUniform, false);
         gl.uniform1i(program.useBlendingUniform, true);
         gl.uniform1f(program.alphaUniform, 1.0);
 
