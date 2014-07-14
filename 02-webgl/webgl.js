@@ -840,10 +840,6 @@ $(function() {
             }
         }
 
-        console.log(indexes);
-        console.log(textures);
-        console.log(positions.length / 3, normals.length / 3, colors.length / 4, indexes.length / 3);
-
         var positionsBuffer = gl.createBuffer();
         positionsBuffer.itemSize = 3;
         positionsBuffer.numItems = positions.length / positionsBuffer.itemSize;
@@ -966,8 +962,8 @@ $(function() {
 
         pushModelViewMatrix();
 
-        mat4.rotate(modelViewMatrix, degreesToRadians(-scene.rotx), [1, 0, 0]);
-        mat4.rotate(modelViewMatrix, degreesToRadians(-scene.roty), [0, 1, 0]);
+        mat4.rotate(modelViewMatrix, degreesToRadians(-scene.pitch), [1, 0, 0]);
+        mat4.rotate(modelViewMatrix, degreesToRadians(-scene.yaw), [0, 1, 0]);
 
         mat4.translate(modelViewMatrix, [-scene.x, -scene.y, -scene.z]);
 
@@ -1027,8 +1023,8 @@ $(function() {
                 round2(scene.x) + ', ' +
                 round2(scene.y) + ', ' +
                 round2(scene.z) + ') (' +
-                round2(scene.rotx) + ', ' +
-                round2(scene.roty) + ', ' +
+                round2(scene.pitch) + ', ' +
+                round2(scene.yaw) + ', ' +
                 round2(scene.rotz) + ') ' +
                 '');
             framesCount = 0;
@@ -1042,15 +1038,15 @@ $(function() {
         }
 
         if (currentKeys[33]) { // lookup
-            scene.rotx += 0.1 * elapsed;
+            scene.pitch += 0.1 * elapsed;
         } else if (currentKeys[34]) { // lookdown
-            scene.rotx -= 0.1 * elapsed;
+            scene.pitch -= 0.1 * elapsed;
         }
 
         if (currentKeys[222]) { // turn left
-            scene.roty += 0.1 * elapsed;
+            scene.yaw += 0.1 * elapsed;
         } else if (currentKeys[190]) { // turn right
-            scene.roty -= 0.1 * elapsed;
+            scene.yaw -= 0.1 * elapsed;
         }
 
         var speed = 0;
@@ -1067,11 +1063,11 @@ $(function() {
             strafeSpeed = -1;
         }
 
-        scene.x -= 0.01 * elapsed * Math.sin(degreesToRadians(scene.roty)) * speed;
-        scene.z -= 0.01 * elapsed * Math.cos(degreesToRadians(scene.roty)) * speed;
+        scene.x -= 0.01 * elapsed * Math.sin(degreesToRadians(scene.yaw)) * speed;
+        scene.z -= 0.01 * elapsed * Math.cos(degreesToRadians(scene.yaw)) * speed;
 
-        scene.x -= 0.01 * elapsed * Math.sin(degreesToRadians(scene.roty + 90)) * strafeSpeed;
-        scene.z -= 0.01 * elapsed * Math.cos(degreesToRadians(scene.roty + 90)) * strafeSpeed;
+        scene.x -= 0.01 * elapsed * Math.sin(degreesToRadians(scene.yaw + 90)) * strafeSpeed;
+        scene.z -= 0.01 * elapsed * Math.cos(degreesToRadians(scene.yaw + 90)) * strafeSpeed;
 
         prevTime = newTime;
     };
@@ -1122,6 +1118,53 @@ $(function() {
         currentKeys[event.keyCode] = type === 'down';
     };
 
+    var mouseDown = false;
+    var lastX = -1;
+    var lastY = -1;
+
+    /**
+     * Mouse event handler.
+     */
+    var handleMouse = function(type, event) {
+        if (!mouseDown || type != 'move') {
+            mouseDown = type == 'down';
+
+            if (mouseDown) {
+                canvas.requestPointerLock =
+                    canvas.requestPointerLock ||
+                    canvas.mozRequestPointerLock ||
+                    canvas.webkitRequestPointerLock;
+                canvas.requestPointerLock();
+            } else {
+                document.exitPointerLock=
+                    document.exitPointerLock ||
+                    document.mozExitPointerLock ||
+                    document.webkitExitPointerLock;
+                document.exitPointerLock();
+                lastX = -1;
+                lastY = -1;
+            }
+            return;
+        }
+
+        var x = event.originalEvent.movementX
+             || event.originalEvent.mozMovementX
+             || event.originalEvent.webkitMovementX
+             || (event.pageX - lastX);
+        var y = event.originalEvent.movementY
+             || event.originalEvent.mozMovementY
+             || event.originalEvent.webkitMovementY
+             || (event.pageY - lastY);
+
+        if (lastX != -1 && lastY !== -1) {
+            scene.pitch -= y / 5;
+            scene.yaw -= x / 5;
+        }
+
+        lastX = event.pageX;
+        lastY = event.pageY;
+    };
+
     var gl = initGl('#canvas');
     var vertexShader   = getShaderGlsl('#2d-shader-vertex');
     var fragmentShader = getShaderGlsl('#2d-shader-fragment');
@@ -1136,9 +1179,8 @@ $(function() {
         y:   0.0,
         z:  10.0,
 
-        rotx: 0.0,
-        roty: 0.0,
-        rotz: 0.0,
+        pitch: 0.0,
+        yaw: 0.0,
     };
 
     var crateTextures = [
@@ -1164,6 +1206,13 @@ $(function() {
 
     $(document).keydown(function(e) { handleInput('down', e); });
     $(document).keyup(function(e)   { handleInput('up', e); });
+    $('#canvas').mousedown(function(e)  { handleMouse('down', e); });
+    $('#canvas').mouseup(function(e)    { handleMouse('up', e); });
+    $('#canvas').mouseleave(function(e) { handleMouse('up', e); });
+    $('#canvas').mousemove(function(e)  { handleMouse('move', e); });
+    $('#canvas').on('pointerlockchange', function(e)  { handleMouse('move', e); });
+    $('#canvas').on('mozpointerlockchange', function(e)  { handleMouse('move', e); });
+    $('#canvas').on('webkitpointerlockchange', function(e)  { handleMouse('move', e); });
 
     tick();
 });
