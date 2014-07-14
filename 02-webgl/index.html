@@ -22,24 +22,35 @@
         uniform vec3 uDirectionalLighting;
         uniform vec3 uDirectionalColor;
 
+        uniform bool uUsePointLighting;
+        uniform vec3 uPointLighting;
+        uniform vec3 uPointColor;
+
         varying vec2 vTextureCoord;
         varying vec4 vColor;
         varying vec3 vLightingWeight;
 
         void main(void) {
+            vec4 position = uPerspectiveMatrix * uModelViewMatrix * vec4(aVertexPosition, 1.0);
             if (uUseLighting) {
+                vLightingWeight = uAmbientColor;
+
+                vec3 transformedNormal = uNormalMatrix * aVertexNormal;
                 if (uUseDirectionalLighting) {
-                    vec3 transformedNormal = uNormalMatrix * aVertexNormal;
                     float directionalLightingWeight = max(dot(transformedNormal, uDirectionalLighting), 0.0);
-                    vLightingWeight = uDirectionalColor * directionalLightingWeight + uAmbientColor;
-                } else {
-                    vLightingWeight = uAmbientColor;
+                    vLightingWeight += uDirectionalColor * directionalLightingWeight;
+                }
+                if (uUsePointLighting) {
+                    //vec3 lightingDirection = uDirectionalLighting;
+                    vec3 lightingDirection = normalize(uPointLighting - position.xyz);
+                    float pointLightingWeight = max(dot(transformedNormal, lightingDirection), 0.0);
+                    vLightingWeight += uPointColor * pointLightingWeight;
                 }
             } else {
                 vLightingWeight = vec3(1.0, 1.0, 1.0);
             }
 
-            gl_Position = uPerspectiveMatrix * uModelViewMatrix * vec4(aVertexPosition, 1.0);
+            gl_Position = position;
             vTextureCoord = aTextureCoord;
             vColor = aVertexColor;
         }
@@ -175,8 +186,8 @@
         var settings = {
             animate: true,
             useLighting: true,
-            useDirectionalLighting: true,
-            usePointLighting: false,
+            //useDirectionalLighting: true,
+            usePointLighting: true,
             useSpecularLighting: false,
             usePerFragmentLighting: false,
 
