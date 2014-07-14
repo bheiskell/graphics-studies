@@ -946,6 +946,11 @@ $(function() {
         vec3.scale(directionalLighting, -1); // normal calculation is with the inverted value of the light's direction
         gl.uniform3fv(program.directionalLightingUniform, directionalLighting);
 
+        var pointLighting = vec3.create();
+        vec3.set([settings.pointX, settings.pointY, settings.pointZ], pointLighting);
+        vec3.scale(pointLighting, -1);
+        gl.uniform3fv(program.pointLightingUniform, pointLighting);
+
         gl.uniform1i(program.useBlendingUniform, settings.useBlending);
         gl.uniform1f(program.alphaUniform, settings.alpha);
 

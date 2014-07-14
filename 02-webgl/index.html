@@ -31,7 +31,7 @@
         varying vec3 vLightingWeight;
 
         void main(void) {
-            vec4 position = uPerspectiveMatrix * uModelViewMatrix * vec4(aVertexPosition, 1.0);
+            vec4 position = uModelViewMatrix * vec4(aVertexPosition, 1.0);
             if (uUseLighting) {
                 vLightingWeight = uAmbientColor;
 
@@ -41,7 +41,6 @@
                     vLightingWeight += uDirectionalColor * directionalLightingWeight;
                 }
                 if (uUsePointLighting) {
-                    //vec3 lightingDirection = uDirectionalLighting;
                     vec3 lightingDirection = normalize(uPointLighting - position.xyz);
                     float pointLightingWeight = max(dot(transformedNormal, lightingDirection), 0.0);
                     vLightingWeight += uPointColor * pointLightingWeight;
@@ -50,7 +49,7 @@
                 vLightingWeight = vec3(1.0, 1.0, 1.0);
             }
 
-            gl_Position = position;
+            gl_Position = uPerspectiveMatrix * position;
             vTextureCoord = aTextureCoord;
             vColor = aVertexColor;
         }
