@@ -807,36 +807,35 @@ $(function() {
         var longitudes = 30; // east / west
 
         var i = 0;
-        for (var longitude = -longitudes / 2; longitude < longitudes / 2; longitude++) {
-            for (var latitude = -latitudes / 2; latitude < latitudes / 2; latitude++) {
-                var longDegree = longitude * 360 / longitudes;
-                var latDegree = (latitude) * 180 / (latitudes);
+        for (var longitude = 0; longitude <= longitudes; longitude++) {
+            for (var latitude = 0; latitude <= latitudes; latitude++) {
+
+                var longRatio = longitude / longitudes;
+                var latRatio  = latitude  / latitudes;
+
+                var longRadian = Math.PI * longRatio * 2;
+                var latRadian  = Math.PI * latRatio - Math.PI / 2;
+
                 var vector = [
-                    Math.cos(degreesToRadians(latDegree)) * Math.cos(degreesToRadians(longDegree)),
-                    Math.sin(degreesToRadians(latDegree)),
-                    Math.cos(degreesToRadians(latDegree)) * Math.sin(degreesToRadians(longDegree)),
+                    Math.cos(latRadian) * Math.cos(longRadian),
+                    Math.sin(latRadian),
+                    Math.cos(latRadian) * Math.sin(longRadian),
                 ];
+
                 positions.push.apply(positions, vector);
-                normals.push.apply(normals, vector);
-                colors.push.apply(colors, [longitude/longitudes + 0.5, latitude/latitudes + 0.5, 1.0, 1.0]);
-                if (longitude >= 14) {
-                console.log('mark');
-                textures.push.apply(textures, [
-                    1.0, latitude / latitudes + 0.5
-                ]);
-                } else {
-                textures.push.apply(textures, [
-                    longitude / longitudes + 0.5, latitude / latitudes + 0.5
-                ]);
-                }
+                normals  .push.apply(normals,   vector);
+
+                colors  .push.apply(colors,   [ longRatio, latRatio, 1.0, 1.0 ]);
+                textures.push.apply(textures, [ longRatio, latRatio ]);
             }
         }
         for (var longitude = 0; longitude < longitudes; longitude++) {
-            for (var latitude = 0; latitude < latitudes - 1; latitude++) {
-                var thisLong = latitude + (longitude * latitudes);
-                var nextLong = (thisLong + latitudes) % (longitudes * latitudes);
-                indexes.push.apply(indexes, [thisLong, thisLong + 1, nextLong]);
-                indexes.push.apply(indexes, [thisLong + 1, nextLong, nextLong + 1]);
+            for (var latitude = 0; latitude < latitudes; latitude++) {
+                var curr = (longitude * (latitudes + 1)) + latitude;
+                var next = (curr + latitudes + 1) % ((longitudes + 1) * (latitudes + 1));
+
+                indexes.push.apply(indexes, [curr, curr + 1, next]);
+                indexes.push.apply(indexes, [curr + 1, next, next + 1]);
 
             }
         }
