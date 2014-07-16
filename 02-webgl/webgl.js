@@ -989,6 +989,7 @@ $(function() {
 
             mat4.rotate(modelViewMatrix, degreesToRadians(-scene.pitch), [1, 0, 0]);
             mat4.rotate(modelViewMatrix, degreesToRadians(-scene.yaw), [0, 1, 0]);
+            mat4.rotate(modelViewMatrix, degreesToRadians(-scene.roll), [0, 0, 1]);
 
             mat4.translate(modelViewMatrix, [-scene.x, -scene.y, -scene.z]);
 
@@ -1209,6 +1210,7 @@ $(function() {
 
         pitch: 0.0,
         yaw: 0.0,
+        roll: 0.0,
     };
 
     var crateTextures = [
