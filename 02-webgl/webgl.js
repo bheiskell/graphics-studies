@@ -110,8 +110,10 @@ $(function() {
         program.directionalColorUniform = gl.getUniformLocation(program, 'uDirectionalColor');
 
         program.usePointLightingUniform = gl.getUniformLocation(program, 'uUsePointLighting');
+        program.useSpecularLightingUniform = gl.getUniformLocation(program, 'uUseSpecularLighting');
         program.pointLightingUniform = gl.getUniformLocation(program, 'uPointLighting');
-        program.pointColorUniform = gl.getUniformLocation(program, 'uPointColor');
+        program.pointDiffuseColorUniform = gl.getUniformLocation(program, 'uPointDiffuseColor');
+        program.pointSpecularColorUniform = gl.getUniformLocation(program, 'uPointSpecularColor');
 
         program.usePerFragmentLighting = gl.getUniformLocation(program, 'uUsePerFragmentLighting');
 
@@ -944,6 +946,7 @@ $(function() {
         gl.uniform1i(program.useLightingUniform, settings.useLighting);
         gl.uniform1i(program.useDirectionalLightingUniform, settings.useDirectionalLighting);
         gl.uniform1i(program.usePointLightingUniform, settings.usePointLighting);
+        gl.uniform1i(program.useSpecularLightingUniform, settings.useSpecularLighting);
 
         var directionalLighting = vec3.create();
         vec3.normalize([settings.directionalX, settings.directionalY, settings.directionalZ], directionalLighting);
@@ -1245,8 +1248,12 @@ $(function() {
             color: 'ambient',
         },
         {
-            uniform: 'pointColorUniform',
+            uniform: 'pointDiffuseColorUniform',
             color: 'diffuse',
+        },
+        {
+            uniform: 'pointSpecularColorUniform',
+            color: 'specular',
         },
     ];
 

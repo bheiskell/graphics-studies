@@ -25,7 +25,7 @@
 
         uniform bool uUsePointLighting;
         uniform vec3 uPointLighting;
-        uniform vec3 uPointColor;
+        uniform vec3 uPointDiffuseColor;
 
         varying vec4 vPosition;
         varying vec3 vTransformedNormal;
@@ -46,7 +46,7 @@
                 if (uUsePointLighting) {
                     vec3 lightingDirection = normalize(uPointLighting - vPosition.xyz);
                     float pointLightingWeight = max(dot(vTransformedNormal, lightingDirection), 0.0);
-                    vLightingWeight += uPointColor * pointLightingWeight;
+                    vLightingWeight += uPointDiffuseColor * pointLightingWeight;
                 }
             } else {
                 vLightingWeight = vec3(1.0, 1.0, 1.0);
@@ -71,8 +71,10 @@
         uniform vec3 uDirectionalColor;
 
         uniform bool uUsePointLighting;
+        uniform bool uUseSpecularLighting;
         uniform vec3 uPointLighting;
-        uniform vec3 uPointColor;
+        uniform vec3 uPointDiffuseColor;
+        uniform vec3 uPointSpecularColor;
 
         uniform bool uUseBlending;
         uniform float uAlpha;
@@ -97,7 +99,15 @@
                 if (uUsePointLighting) {
                     vec3 lightingDirection = normalize(uPointLighting - vPosition.xyz);
                     float pointLightingWeight = max(dot(vTransformedNormal, lightingDirection), 0.0);
-                    lightingWeight += uPointColor * pointLightingWeight;
+                    lightingWeight += uPointDiffuseColor * pointLightingWeight;
+
+                    if (uUseSpecularLighting) {
+                        vec3 eyeDirection = normalize(-vPosition.xyz);
+                        vec3 reflectionDirection = reflect(-lightingDirection, normalize(vTransformedNormal));
+
+                        float pointLightingWeight = pow(max(dot(reflectionDirection, eyeDirection), 0.0), 30.0);
+                        lightingWeight += uPointSpecularColor * pointLightingWeight;
+                    }
                 }
             } else {
                 lightingWeight = vLightingWeight;
@@ -182,10 +192,10 @@
                 <fieldset>
                     <legend>Lighting</legend>
                     <label><input type="checkbox" name="useLighting" />Use Lighting</label>
+                    <label><input type="checkbox" name="usePerFragmentLighting" />Use Per Fragment Lighting</label>
                     <label><input type="checkbox" name="useDirectionalLighting" />Use Directional Lighting</label>
                     <label><input type="checkbox" name="usePointLighting" />Use Point Lighting</label>
                     <label><input type="checkbox" name="useSpecularLighting" />Use Specular Lighting</label>
-                    <label><input type="checkbox" name="usePerFragmentLighting" />Use Per Fragment Lighting</label>
                 </fieldset>
                 <fieldset>
                     <legend>Directional</legend>
