@@ -59,6 +59,7 @@ $(function() {
 
         if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
             console.log('Unable to compile shader: ', selector, definition);
+            console.log(gl.getShaderInfoLog(shader));
             return null;
         }
 
@@ -81,6 +82,7 @@ $(function() {
 
         if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
             console.log('Unable to initialize shaders');
+            console.log(gl.getProgramInfoLog(program));
         }
 
         gl.useProgram(program);
@@ -110,6 +112,8 @@ $(function() {
         program.usePointLightingUniform = gl.getUniformLocation(program, 'uUsePointLighting');
         program.pointLightingUniform = gl.getUniformLocation(program, 'uPointLighting');
         program.pointColorUniform = gl.getUniformLocation(program, 'uPointColor');
+
+        program.usePerFragmentLighting = gl.getUniformLocation(program, 'uUsePerFragmentLighting');
 
         program.useBlendingUniform = gl.getUniformLocation(program, 'uUseBlending');
         program.alphaUniform = gl.getUniformLocation(program, 'uAlpha');
@@ -952,6 +956,7 @@ $(function() {
         gl.uniform3fv(program.pointLightingUniform, pointLighting);
 
         gl.uniform1i(program.useBlendingUniform, settings.useBlending);
+        gl.uniform1i(program.usePerFragmentLighting, settings.usePerFragmentLighting);
         gl.uniform1f(program.alphaUniform, settings.alpha);
 
         lights.forEach(function(light, index) {
