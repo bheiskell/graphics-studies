@@ -237,7 +237,7 @@ $(function() {
 
         this.draw = function(program, perspectiveMatrix, modelViewMatrix) {
             var rotationOnly = mat4.create();
-            mat4.identity(rotationOnly);
+            mat4.set(modelViewMatrix, rotationOnly);
             mat4.rotate(rotationOnly, degreesToRadians(this.rotation), [0, 1, 0]);
             setNormalUniform(program, rotationOnly);
 
@@ -315,7 +315,7 @@ $(function() {
 
         this.draw = function(program, perspectiveMatrix, modelViewMatrix) {
             var rotationOnly = mat4.create();
-            mat4.identity(rotationOnly);
+            mat4.set(modelViewMatrix, rotationOnly);
             mat4.rotate(rotationOnly, degreesToRadians(this.rotation), [1, 0, 0]);
             setNormalUniform(program, rotationOnly);
 
@@ -428,7 +428,7 @@ $(function() {
 
         this.draw = function(program, perspectiveMatrix, modelViewMatrix) {
             var rotationOnly = mat4.create();
-            mat4.identity(rotationOnly);
+            mat4.set(modelViewMatrix, rotationOnly);
             mat4.rotate(rotationOnly, degreesToRadians(this.rotation), [0, 1, 0]);
             setNormalUniform(program, rotationOnly);
 
@@ -644,7 +644,7 @@ $(function() {
 
         this.draw = function(program, perspectiveMatrix, modelViewMatrix) {
             var rotationOnly = mat4.create();
-            mat4.identity(rotationOnly);
+            mat4.set(modelViewMatrix, rotationOnly);
             mat4.rotate(rotationOnly, degreesToRadians(this.rotation), [1, 1, 1]);
             setNormalUniform(program, rotationOnly);
 
@@ -763,7 +763,7 @@ $(function() {
 
         this.draw = function(program, perspectiveMatrix, modelViewMatrix) {
             var rotationOnly = mat4.create();
-            mat4.identity(rotationOnly);
+            mat4.set(modelViewMatrix, rotationOnly);
             mat4.rotate(rotationOnly, degreesToRadians(this.rotation), [0, 0, 1]);
             setNormalUniform(program, rotationOnly);
 
@@ -896,7 +896,7 @@ $(function() {
 
         this.draw = function(program, perspectiveMatrix, modelViewMatrix) {
             var rotationOnly = mat4.create();
-            mat4.identity(rotationOnly);
+            mat4.set(modelViewMatrix, rotationOnly);
             mat4.rotate(rotationOnly, degreesToRadians(this.rotation), [0, 1, 0]);
             setNormalUniform(program, rotationOnly);
 
@@ -948,16 +948,6 @@ $(function() {
         gl.uniform1i(program.usePointLightingUniform, settings.usePointLighting);
         gl.uniform1i(program.useSpecularLightingUniform, settings.useSpecularLighting);
 
-        var directionalLighting = vec3.create();
-        vec3.normalize([settings.directionalX, settings.directionalY, settings.directionalZ], directionalLighting);
-        vec3.scale(directionalLighting, -1); // normal calculation is with the inverted value of the light's direction
-        gl.uniform3fv(program.directionalLightingUniform, directionalLighting);
-
-        var pointLighting = vec3.create();
-        vec3.set([settings.pointX, settings.pointY, settings.pointZ], pointLighting);
-        vec3.scale(pointLighting, -1);
-        gl.uniform3fv(program.pointLightingUniform, pointLighting);
-
         gl.uniform1i(program.useBlendingUniform, settings.useBlending);
         gl.uniform1i(program.usePerFragmentLighting, settings.usePerFragmentLighting);
         gl.uniform1f(program.alphaUniform, settings.alpha);
@@ -1000,6 +990,22 @@ $(function() {
             mat4.rotate(modelViewMatrix, degreesToRadians(-scene.roll), [0, 0, 1]);
 
             mat4.translate(modelViewMatrix, [-scene.x, -scene.y, -scene.z]);
+
+            var cameraRotation = mat4.create();
+            mat4.identity(cameraRotation);
+            mat4.rotate(cameraRotation, degreesToRadians(-scene.pitch), [1, 0, 0]);
+            mat4.rotate(cameraRotation, degreesToRadians(-scene.yaw), [0, 1, 0]);
+            mat4.rotate(cameraRotation, degreesToRadians(-scene.roll), [0, 0, 1]);
+
+            var directionalLighting = vec3.create();
+            mat4.multiplyVec3(cameraRotation, [settings.directionalX, settings.directionalY, settings.directionalZ], directionalLighting);
+            vec3.normalize(directionalLighting);
+            vec3.scale(directionalLighting, -1); // normal calculation is with the inverted value of the light's direction
+            gl.uniform3fv(program.directionalLightingUniform, directionalLighting);
+
+            var pointLighting = vec3.create();
+            mat4.multiplyVec3(modelViewMatrix, [settings.pointX, settings.pointY, settings.pointZ], pointLighting);
+            gl.uniform3fv(program.pointLightingUniform, pointLighting);
 
             objects.forEach(function(object) {
                 pushModelViewMatrix();

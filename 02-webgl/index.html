@@ -64,6 +64,7 @@
         uniform bool uUseTexture;
         uniform sampler2D uSampler;
 
+        uniform bool uUseLighting;
         uniform vec3 uAmbientColor;
 
         uniform bool uUseDirectionalLighting;
@@ -89,7 +90,7 @@
 
         void main(void) {
             vec3 lightingWeight;
-            if (uUsePerFragmentLighting) {
+            if (uUsePerFragmentLighting && uUseLighting) {
                 lightingWeight = uAmbientColor;
 
                 if (uUseDirectionalLighting) {
@@ -229,20 +230,20 @@
         var settings = {
             animate: true,
             useLighting: true,
-            //useDirectionalLighting: true,
+            usePerFragmentLighting: true,
+            useDirectionalLighting: true,
             usePointLighting: true,
-            useSpecularLighting: false,
-            usePerFragmentLighting: false,
+            useSpecularLighting: true,
 
-            directionalX: -0.25,
-            directionalY: -0.25,
+            directionalX:  1.0,
+            directionalY:  0.0,
             directionalZ: -1.0,
 
             directionalRGB: '#e1f5c4',
 
-            pointX:  0.0,
+            pointX: 10.0,
             pointY:  0.0,
-            pointZ: -10.0,
+            pointZ: 10.0,
 
             diffuseRGB: '#ff4e50',
             specularRGB: '#ede574',
