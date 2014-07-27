@@ -1113,6 +1113,10 @@ $(function() {
         scene.z -= 0.01 * elapsed * Math.cos(degreesToRadians(scene.yaw + 90)) * strafeSpeed;
 
         prevTime = newTime;
+
+        // Move camera around the origin in a circle
+        //settings.pointX = 10 * Math.cos(prevTime/1000);
+        //settings.pointZ = 10 * Math.sin(prevTime/1000);
     };
 
     /**
