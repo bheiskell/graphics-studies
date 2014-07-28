@@ -27,6 +27,9 @@ $(function() {
 
         gl.depthFunc(gl.LESS);
 
+        gl.enable(gl.CULL_FACE);
+        gl.cullFace(gl.BACK);
+
         //console.log('Antialiasing:', gl.getParameter(gl.SAMPLES));
 
         return gl;
@@ -846,7 +849,7 @@ $(function() {
                 var next = (curr + latitudes + 1) % ((longitudes + 1) * (latitudes + 1));
 
                 indexes.push.apply(indexes, [curr, curr + 1, next]);
-                indexes.push.apply(indexes, [curr + 1, next, next + 1]);
+                indexes.push.apply(indexes, [curr + 1, next + 1, next]);
 
             }
         }
