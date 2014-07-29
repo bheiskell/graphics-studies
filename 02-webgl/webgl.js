@@ -103,7 +103,9 @@ $(function() {
         program.modelViewMatrixUniform = gl.getUniformLocation(program, 'uModelViewMatrix');
         program.normalMatrixUniform = gl.getUniformLocation(program, 'uNormalMatrix');
         program.samplerUniform = gl.getUniformLocation(program, 'uSampler');
+        program.samplerNormalUniform = gl.getUniformLocation(program, 'uSamplerNormal');
         program.useTextureUniform = gl.getUniformLocation(program, 'uUseTexture');
+        program.useNormalTextureUniform = gl.getUniformLocation(program, 'uUseNormalTexture');
 
         program.useLightingUniform = gl.getUniformLocation(program, 'uUseLighting');
         program.ambientColorUniform = gl.getUniformLocation(program, 'uAmbientColor');
@@ -462,7 +464,7 @@ $(function() {
     /**
      * Create a cube.
      */
-    var Cube = function(position, textureArray) {
+    var Cube = function(position, textureArray, normalTexture) {
         var positions = [
             // Front face
             -1.0, -1.0,  1.0,
@@ -670,6 +672,11 @@ $(function() {
             gl.bindTexture(gl.TEXTURE_2D, textureArray !== undefined ? textureArray[this.texture] : null);
             gl.uniform1i(program.samplerUniform, 0);
             gl.uniform1i(program.useTextureUniform, textureArray !== undefined);
+
+            gl.activeTexture(gl.TEXTURE1);
+            gl.bindTexture(gl.TEXTURE_2D, normalTexture);
+            gl.uniform1i(program.samplerNormalUniform, 1);
+            gl.uniform1i(program.useNormalTextureUniform, normalTexture !== undefined);
 
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexes);
 
@@ -1241,6 +1248,8 @@ $(function() {
     ];
     var starTexture = getTexture('star.gif', gl.LINEAR,  gl.LINEAR_MIPMAP_NEAREST);
     var moonTexture = getTexture('moon.gif', gl.LINEAR,  gl.LINEAR_MIPMAP_NEAREST);
+    var clothTexture = getTexture('cloth.png', gl.LINEAR,  gl.LINEAR_MIPMAP_NEAREST)
+    var clothNormal = getTexture('cloth_normal.png', gl.LINEAR,  gl.LINEAR_MIPMAP_NEAREST)
 
     var objects = [
         new Cube(    [-4.5, -1.5, 0.0], crateTextures),
@@ -1248,7 +1257,9 @@ $(function() {
         new Square(  [ 1.5,  1.5, 0.0]),
         new Pyramid( [-1.5, -1.5, 0.0]),
         new Cube(    [ 4.5, -1.5, 0.0]),
-        new Sphere(  [ 1.5, -1.5, 0.0], moonTexture)
+        new Sphere(  [ 1.5, -1.5, 0.0], moonTexture),
+        new Cube(    [-4.5,  1.5, 0.0], [clothTexture], clothNormal),
+        new Cube(    [-7.5,  1.5, 0.0], [clothTexture])
     ];
 
     var lights = [

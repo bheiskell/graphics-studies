@@ -63,6 +63,7 @@
 
         uniform bool uUseTexture;
         uniform sampler2D uSampler;
+        uniform sampler2D uSamplerNormal;
 
         uniform bool uUseLighting;
         uniform vec3 uAmbientColor;
@@ -88,23 +89,33 @@
         varying vec4 vColor;
         varying vec3 vLightingWeight;
 
+        uniform bool uUseNormalTexture;
+
         void main(void) {
+            vec3 transformedNormal;
+            if (uUseNormalTexture) {
+                transformedNormal = normalize(vTransformedNormal * texture2D(uSamplerNormal, vTextureCoord.st).rgb);
+            } else {
+                transformedNormal = vTransformedNormal;
+            }
+
+
             vec3 lightingWeight;
             if (uUsePerFragmentLighting && uUseLighting) {
                 lightingWeight = uAmbientColor;
 
                 if (uUseDirectionalLighting) {
-                    float directionalLightingWeight = max(dot(vTransformedNormal, uDirectionalLighting), 0.0);
+                    float directionalLightingWeight = max(dot(transformedNormal, uDirectionalLighting), 0.0);
                     lightingWeight += uDirectionalColor * directionalLightingWeight;
                 }
                 if (uUsePointLighting) {
                     vec3 lightingDirection = normalize(uPointLighting - vPosition.xyz);
-                    float pointLightingWeight = max(dot(vTransformedNormal, lightingDirection), 0.0);
+                    float pointLightingWeight = max(dot(transformedNormal, lightingDirection), 0.0);
                     lightingWeight += uPointDiffuseColor * pointLightingWeight;
 
                     if (uUseSpecularLighting) {
                         vec3 eyeDirection = normalize(-vPosition.xyz);
-                        vec3 reflectionDirection = reflect(-lightingDirection, normalize(vTransformedNormal));
+                        vec3 reflectionDirection = reflect(-lightingDirection, normalize(transformedNormal));
 
                         float pointLightingWeight = pow(max(dot(reflectionDirection, eyeDirection), 0.0), 30.0);
                         lightingWeight += uPointSpecularColor * pointLightingWeight;
