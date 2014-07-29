@@ -99,6 +99,7 @@
                 transformedNormal = vTransformedNormal;
             }
 
+            float shine = 30.0;
 
             vec3 lightingWeight;
             if (uUsePerFragmentLighting && uUseLighting) {
@@ -117,7 +118,7 @@
                         vec3 eyeDirection = normalize(-vPosition.xyz);
                         vec3 reflectionDirection = reflect(-lightingDirection, normalize(transformedNormal));
 
-                        float pointLightingWeight = pow(max(dot(reflectionDirection, eyeDirection), 0.0), 30.0);
+                        float pointLightingWeight = pow(max(dot(reflectionDirection, eyeDirection), 0.0), shine);
                         lightingWeight += uPointSpecularColor * pointLightingWeight;
                     }
                 }
