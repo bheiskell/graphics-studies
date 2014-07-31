@@ -264,7 +264,7 @@ $(function() {
             gl.drawArrays(gl.TRIANGLES, 0, this.positions.numItems);
         };
         this.animate = function(elapsed) {
-            this.rotation += (90 * elapsed) / 1000.0;
+            this.rotation += (90 * elapsed) / 5000.0;
         };
     };
 
@@ -342,7 +342,7 @@ $(function() {
             gl.drawArrays(gl.TRIANGLE_STRIP, 0, this.positions.numItems);
         };
         this.animate = function(elapsed) {
-            this.rotation += (75 * elapsed) / 1000.0;
+            this.rotation += (75 * elapsed) / 5000.0;
         };
     };
 
@@ -457,7 +457,7 @@ $(function() {
             setMatrixUniforms(program, perspectiveMatrix, modelViewMatrix);
         };
         this.animate = function(elapsed) {
-            this.rotation += (90 * elapsed) / 1000.0;
+            this.rotation += (90 * elapsed) / 5000.0;
         };
     };
 
@@ -685,7 +685,7 @@ $(function() {
             gl.drawElements(gl.TRIANGLES, this.indexes.numItems, gl.UNSIGNED_SHORT, 0);
         };
         this.animate = function(elapsed) {
-            this.rotation += (90 * elapsed) / 1000.0;
+            this.rotation += (90 * elapsed) / 5000.0;
         };
         this.keypress = function(type, input) {
             if (input === 'U') {
@@ -804,7 +804,7 @@ $(function() {
             gl.drawElements(gl.TRIANGLES, this.indexes.numItems, gl.UNSIGNED_SHORT, 0);
         };
         this.animate = function(elapsed) {
-            this.rotation += (90 * elapsed) / 1000.0;
+            this.rotation += (90 * elapsed) / 5000.0;
             this.position = [ Math.sin(this.rotation / 100.0), Math.cos(this.rotation / 100.0), this.position[2] ];
         };
     };
@@ -937,7 +937,7 @@ $(function() {
             gl.drawElements(gl.TRIANGLES, this.indexes.numItems, gl.UNSIGNED_SHORT, 0);
         };
         this.animate = function(elapsed) {
-            this.rotation += (90 * elapsed) / 1000.0;
+            this.rotation += (90 * elapsed) / 5000.0;
         };
     };
 
